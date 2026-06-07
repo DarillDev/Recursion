@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component } from '@angular/core';
 import { ButtonComponent } from './button.component';
 
 @Component({
