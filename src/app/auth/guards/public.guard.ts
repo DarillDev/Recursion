@@ -9,7 +9,7 @@ export const publicGuard: CanActivateFn = () => {
   const config = inject(AUTH_CONFIG);
   const router = inject(Router);
 
-  return authState.isAuthenticated()
-    ? router.createUrlTree([config.redirects.onAuthenticated])
-    : true;
+  return !authState.isAuthenticated()
+    ? true
+    : router.createUrlTree([config.redirects.onAuthenticated]);
 };

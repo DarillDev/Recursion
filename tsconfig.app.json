@@ -12,7 +12,9 @@
       "@api/core": ["src/app/api/core/index.ts"],
       "@api/config": ["src/app/api/config/index.ts"],
       "@api/*": ["src/app/api/controllers/*/index.ts"],
-      "@auth": ["src/app/auth/"]
+      "@auth": ["src/app/auth/"],
+      "@layouts/*": ["src/app/layouts/*/index.ts"],
+      "@features/*": ["src/app/features/*/index.ts"]
     }
   },
   "include": ["src/**/*.ts"],

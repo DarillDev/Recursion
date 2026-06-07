@@ -1,0 +1,15 @@
+<p>login-page works!</p>
+
+<form [formGroup]="form">
+  <div>
+    <label for="email">Email:</label>
+    <input id="email" formControlName="email" type="email" />
+  </div>
+
+  <div>
+    <label for="password">Password:</label>
+    <input id="password" formControlName="password" type="password" />
+  </div>
+
+  <button (click)="onSubmit()">Login</button>
+</form>
