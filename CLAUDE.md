@@ -16,6 +16,60 @@ Run a single test file:
 npx ng test --include="src/app/some.spec.ts"
 ```
 
+## Docs
+
+**`docs/`** — project documentation, feature specs, and implementation plans.
+
+- [docs/categories-spec.md](docs/categories-spec.md) — specification for the Categories directory feature (CRUD, API endpoints, Figma links, auth flow)
+
+Before implementing any feature, check `docs/` for an existing spec. New feature specs and implementation plans go here too.
+
+## Project Structure
+
+```
+src/
+  app/
+    core/          # global guards, interceptors, shared models, constants
+    layouts/       # wrapper components: public/ (unauthenticated) and internal/ (sidebar + auth)
+    features/      # all business features
+  ui-kit/          # reusable UI components with no business logic
+```
+
+### Feature layer rules
+
+Every feature under `features/` must follow this layer structure:
+
+| Layer | Purpose |
+|---|---|
+| `pages/` | Routable components — one per route, placed directly in the router |
+| `components/` | Child components and dialogs used within the feature |
+| `services/` | Any services: HTTP calls, signals store, utilities |
+| `models/interfaces/` | TypeScript interfaces (`I`-prefix) |
+| `models/types/` | Type aliases (`T`-prefix) |
+| `models/enums/` | Enums (`E`-prefix) |
+| `constants/` | Feature-level constants |
+
+Never put HTTP logic in components. Never put UI state in services (keep it in the page component as signals).
+
+### Layouts
+
+- **`layouts/public/`** — renders `<router-outlet>` only, no visual chrome. Used for unauthenticated routes (`/login`).
+- **`layouts/internal/`** — collapsible sidebar (icon nav + user/logout at bottom) + `<router-outlet>`. Protected by `authGuard`. Contains `components/sidebar/`.
+
+### Routing
+
+```
+/login         → PublicLayout  → features/auth/pages/login
+/categories    → InternalLayout (authGuard) → features/categories/pages/categories-list
+/              → redirect → /categories
+```
+
+### UI
+
+- No UI component library — all components are built from scratch to match Figma designs.
+- Shared primitives (table, dialog, form-field, search-input) live in `ui-kit/`.
+- Add/Edit/Delete actions open as modal dialogs — no separate routes for them.
+
 ## Architecture
 
 Angular 21 standalone application. Entry point: `src/main.ts` → `app.config.ts` → `app.routes.ts`.
