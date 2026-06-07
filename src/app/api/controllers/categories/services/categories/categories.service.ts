@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import type { ICreateCategoryDto } from '../../dtos/create-category-dto.interface';
 import type { IUpdateCategoryDto } from '../../dtos/update-category-dto.interface';

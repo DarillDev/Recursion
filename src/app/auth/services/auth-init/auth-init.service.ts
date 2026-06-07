@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import type { Observable} from 'rxjs';
+import { of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 import { AuthHttpService } from '../auth-http/auth-http.service';

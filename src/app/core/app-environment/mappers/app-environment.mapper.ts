@@ -1,4 +1,4 @@
-import { IAppEnvironment } from '../interfaces/app-environment.interface';
+import type { IAppEnvironment } from '../interfaces/app-environment.interface';
 import { AppEnvironment } from '../models/app-environment';
 
 export class AppEnvironmentMapper {

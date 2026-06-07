@@ -1,5 +1,6 @@
+import type {
+  ApplicationConfig} from '@angular/core';
 import {
-  ApplicationConfig,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
@@ -7,8 +8,10 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { AppEnvironment, provideAppEnvironment } from '@core/app-env';
-import { IApiConfig, provideApiConfig } from '@api/config';
+import type { AppEnvironment} from '@core/app-env';
+import { provideAppEnvironment } from '@core/app-env';
+import type { IApiConfig} from '@api/config';
+import { provideApiConfig } from '@api/config';
 import { authInterceptor, provideAuth } from '@auth';
 
 export const appConfigResolver = (appEnvironment: AppEnvironment): ApplicationConfig => {

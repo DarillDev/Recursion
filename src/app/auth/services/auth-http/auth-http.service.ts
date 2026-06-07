@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AUTH_CONFIG } from '../../config/auth-config.token';
 import type { ILoginResponse } from '../../interfaces/login-response.interface';

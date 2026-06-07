@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 import { ApiService } from '@api/core';
 import type { ICategoriesListResponseDto } from '../../dtos/categories-list-response-dto.interface';
 import type { ICreateCategoryDto } from '../../dtos/create-category-dto.interface';

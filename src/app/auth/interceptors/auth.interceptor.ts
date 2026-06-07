@@ -1,9 +1,11 @@
 import { inject } from '@angular/core';
-import {
-  HttpErrorResponse,
+import type {
+  HttpEvent,
   HttpHandlerFn,
   HttpInterceptorFn,
-  HttpRequest,
+  HttpRequest} from '@angular/common/http';
+import {
+  HttpErrorResponse
 } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
@@ -14,7 +16,7 @@ import { AuthHttpService } from '../services/auth-http/auth-http.service';
 import { TokenStorageService } from '../services/token-storage/token-storage.service';
 
 let isRefreshing = false;
-let refreshQueue: Array<() => void> = [];
+let refreshQueue: (() => void)[] = [];
 
 function addAuthHeader(req: HttpRequest<unknown>, accessToken: string): HttpRequest<unknown> {
   return req.clone({ setHeaders: { Authorization: `Bearer ${accessToken}` } });
@@ -57,7 +59,7 @@ function handle401(
   config: IAuthConfig,
   router: Router,
   authHttp: AuthHttpService,
-): Observable<unknown> {
+): Observable<HttpEvent<unknown>> {
   const currentToken = tokenStorage.getToken();
 
   if (!currentToken?.refreshToken) {

@@ -52,7 +52,7 @@ module.exports = defineConfig([
     processor: angular.processInlineTemplates,
     languageOptions: {
       parserOptions: {
-        project: './tsconfig.json',
+        project: ['./tsconfig.app.json', './tsconfig.spec.json'],
         tsconfigRootDir: __dirname,
       },
     },
@@ -75,7 +75,7 @@ module.exports = defineConfig([
     processor: angular.processInlineTemplates,
     languageOptions: {
       parserOptions: {
-        project: './tsconfig.json',
+        project: ['./tsconfig.app.json', './tsconfig.spec.json'],
         tsconfigRootDir: __dirname,
       },
     },

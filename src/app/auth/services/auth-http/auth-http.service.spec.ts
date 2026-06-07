@@ -75,7 +75,7 @@ describe('AuthHttpService', () => {
         .expectOne(`${CONFIG.authUrl}/front/logon/refresh-token`)
         .flush({ ...SERVER_RESPONSE, token: 'new-access', refreshToken: 'new-refresh' });
 
-      expect(result!.token).toEqual({ accessToken: 'new-access', refreshToken: 'new-refresh' });
+      expect(result?.token).toEqual({ accessToken: 'new-access', refreshToken: 'new-refresh' });
     });
   });
 });

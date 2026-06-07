@@ -1,4 +1,5 @@
-import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import type { EnvironmentProviders} from '@angular/core';
+import { makeEnvironmentProviders } from '@angular/core';
 import type { IApiConfig } from './api-config.interface';
 import { API_CONFIG } from './api-config.token';
 

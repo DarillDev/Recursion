@@ -1,4 +1,5 @@
-import { APP_INITIALIZER, EnvironmentProviders, inject, makeEnvironmentProviders } from '@angular/core';
+import type { EnvironmentProviders} from '@angular/core';
+import { APP_INITIALIZER, inject, makeEnvironmentProviders } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AUTH_CONFIG } from './auth-config.token';
 import { AuthInitService } from '../services/auth-init/auth-init.service';

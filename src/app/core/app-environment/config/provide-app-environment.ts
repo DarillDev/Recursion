@@ -1,4 +1,5 @@
-import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import type { EnvironmentProviders} from '@angular/core';
+import { makeEnvironmentProviders } from '@angular/core';
 
 import { AppEnvironment } from '../models/app-environment';
 

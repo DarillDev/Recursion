@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api-config.token';
 import { buildParams } from './utils/build-params.function';
 
