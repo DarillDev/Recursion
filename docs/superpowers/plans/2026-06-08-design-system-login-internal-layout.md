@@ -621,7 +621,7 @@ git commit -m "feat(login): restyle login page with DS tokens"
 
 ---
 
-## Task 7: Добавить иконки в SVG-спрайт и обновить EEIconName
+## Task 7: Добавить иконки в SVG-спрайт и обновить EIconName
 
 **Files:**
 - Modify: `public/icons.svg`
@@ -656,7 +656,7 @@ git commit -m "feat(login): restyle login page with DS tokens"
 - [ ] **Step 2: Обновить `src/shared/ui-kit/icon/enums/icon-name.enum.ts`**
 
 ```typescript
-export enum EEIconName {
+export enum EIconName {
   Edit = 'edit',
   Mail = 'mail',
   Location = 'location',
@@ -676,7 +676,7 @@ export enum EEIconName {
 
 ```bash
 git add public/icons.svg src/shared/ui-kit/icon/enums/icon-name.enum.ts
-git commit -m "feat(ds): add sidebar icons to SVG sprite and EEIconName"
+git commit -m "feat(ds): add sidebar icons to SVG sprite and EIconName"
 ```
 
 ---
@@ -736,7 +736,7 @@ npx ng test --include="src/layouts/internal/components/sidebar/sidebar.component
 
 - [ ] **Step 3: Создать `sidebar.component.ts`**
 
-`icon/index.ts` экспортирует `EEIconName` под алиасом `EIconName` — использовать именно этот импорт.
+`icon/index.ts` экспортирует `EIconName` напрямую (без алиаса) — использовать `import { IconComponent, EIconName } from '@shared/ui-kit/icon'`.
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
