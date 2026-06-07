@@ -22,7 +22,7 @@ const typescriptStrictRules = {
   '@typescript-eslint/no-floating-promises': 'error',
   '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
   '@typescript-eslint/explicit-function-return-type': ['error', { allowExpressions: true, allowTypedFunctionExpressions: true }],
-  '@typescript-eslint/explicit-member-accessibility': ['error', { accessibility: 'explicit' }],
+  '@typescript-eslint/explicit-member-accessibility': ['error', { accessibility: 'explicit', overrides: { constructors: 'off' } }],
   '@typescript-eslint/prefer-readonly': 'error',
   '@typescript-eslint/naming-convention': [
     'error',
@@ -65,7 +65,7 @@ module.exports = defineConfig([
     },
   },
   {
-    files: ['src/ui-kit/**/*.ts'],
+    files: ['src/shared/ui-kit/**/*.ts'],
     extends: [
       eslint.configs.recommended,
       tseslint.configs.recommended,
@@ -91,6 +91,7 @@ module.exports = defineConfig([
     files: ['**/*.spec.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
     },
   },
   {

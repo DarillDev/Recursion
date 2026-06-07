@@ -8,7 +8,8 @@ import type { AppEnvironment } from 'src/shared/core/app-environment';
 import { provideAppEnvironment } from 'src/shared/core/app-environment';
 import type { IApiConfig } from 'src/shared/api/config';
 import { provideApiConfig } from 'src/shared/api/config';
-import { authInterceptor, IAuthConfig, provideAuth } from 'src/shared/auth';
+import type { IAuthConfig} from 'src/shared/auth';
+import { authInterceptor, provideAuth } from 'src/shared/auth';
 
 export const appConfigResolver = (appEnvironment: AppEnvironment): ApplicationConfig => {
   const apiConfig: IApiConfig = { baseUrl: appEnvironment.apiUrl };
@@ -16,7 +17,7 @@ export const appConfigResolver = (appEnvironment: AppEnvironment): ApplicationCo
     authUrl: appEnvironment.apiUrl,
     redirects: {
       onUnauthenticated: '/login',
-      onAuthenticated: '/categories',
+      onAuthenticated: '/internal/categories',
     },
   };
 

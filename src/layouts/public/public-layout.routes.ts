@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import type { Routes } from '@angular/router';
 import { PublicLayoutComponent } from './public-layout.component';
 export const PUBLIC_LAYOUT_ROUTES: Routes = [
   {
@@ -9,6 +9,11 @@ export const PUBLIC_LAYOUT_ROUTES: Routes = [
         path: 'login',
         loadChildren: () =>
           import('src/features/feature-login').then((m) => m.FEATURE_LOGIN_ROUTES),
+      },
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'login',
       },
     ],
   },

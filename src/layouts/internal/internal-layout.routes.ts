@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import type { Routes } from '@angular/router';
 import { InternalLayoutComponent } from './internal-layout.component';
 
 export const INTERNAL_LAYOUT_ROUTES: Routes = [

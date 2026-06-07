@@ -1,0 +1,27 @@
+<ui-kit-form-field>
+  @if (label(); as label) {
+    <label uiKitLabel [for]="id()">{{ label }}</label>
+  }
+
+  <input
+    uiKitInput
+    class="ui-kit-input-field"
+    [id]="id()"
+    [type]="type()"
+    [placeholder]="placeholder()"
+    [value]="value()"
+    [disabled]="isDisabled()"
+    (input)="onValueChange($event)"
+    (blur)="onBlur()"
+  />
+
+  @if (error(); as err) {
+    <span uiKitError>{{ err }}</span>
+  } @else if (ngControl?.control?.errors; as errors) {
+    <span uiKitError>{{ errors | controlErrorText }}</span>
+  }
+
+  @if (hint(); as hint) {
+    <span uiKitHint>{{ hint }}</span>
+  }
+</ui-kit-form-field>
