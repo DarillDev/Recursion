@@ -7,6 +7,10 @@ export class AppEnvironment implements IAppEnvironment {
     return this.source.apiUrl;
   }
 
+  public get authUrl(): string {
+    return this.source.authUrl;
+  }
+
   public get title(): string {
     return this.source.title;
   }

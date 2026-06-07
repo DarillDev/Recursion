@@ -7,6 +7,10 @@ export class AppEnvironmentMapper {
       throw new Error('environment.json does NOT have - apiUrl');
     }
 
+    if (!dto.authUrl) {
+      throw new Error('environment.json does NOT have - authUrl');
+    }
+
     if (!dto.title) {
       throw new Error('environment.json does NOT have - title');
     }
