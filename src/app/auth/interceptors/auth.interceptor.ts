@@ -1,45 +1,50 @@
 import { inject } from '@angular/core';
-import type {
-  HttpEvent,
-  HttpHandlerFn,
-  HttpInterceptorFn,
-  HttpRequest} from '@angular/common/http';
-import {
-  HttpErrorResponse
-} from '@angular/common/http';
+import type { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, throwError } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
-import type { IAuthConfig } from '../interfaces/auth-config.interface';
+import type { Observable } from 'rxjs';
+import { throwError } from 'rxjs';
+import { catchError, finalize, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { AUTH_CONFIG } from '../config/auth-config.token';
 import { AuthHttpService } from '../services/auth-http/auth-http.service';
 import { TokenStorageService } from '../services/token-storage/token-storage.service';
 
-let isRefreshing = false;
-let refreshQueue: (() => void)[] = [];
+/**
+ * null  — refresh не выполняется.
+ * !null — refresh уже запущен; новые 401 подписываются к нему, а не стартуют свой.
+ *
+ * Объявлена вне функции-интерцептора — должна быть singleton уровня модуля.
+ */
+let refreshInProgress$: Observable<unknown> | null = null;
 
-function addAuthHeader(req: HttpRequest<unknown>, accessToken: string): HttpRequest<unknown> {
-  return req.clone({ setHeaders: { Authorization: `Bearer ${accessToken}` } });
-}
-
-function flushQueue(): void {
-  const queue = refreshQueue;
-  refreshQueue = [];
-  queue.forEach((fn) => fn());
-}
-
+/**
+ * HTTP-интерцептор авторизации.
+ *
+ * Отвечает за три вещи:
+ *  1. Добавляет заголовок `Authorization: Bearer <token>` к каждому исходящему запросу.
+ *  2. При получении 401 автоматически обновляет пару токенов и повторяет запрос.
+ *  3. Предотвращает параллельные запросы на обновление токена (refresh-lock):
+ *     если refresh уже идёт — все новые 401 ждут его результата, а не запускают свой.
+ */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const tokenStorage = inject(TokenStorageService);
   const config = inject(AUTH_CONFIG);
-  const router = inject(Router);
+  const tokenStorage = inject(TokenStorageService);
   const authHttp = inject(AuthHttpService);
+  const router = inject(Router);
 
+  // Запросы к endpoints авторизации (login, refresh) не должны содержать
+  // Bearer-заголовок — их пропускаем без модификации.
   if (req.url.startsWith(config.authUrl)) {
     return next(req);
   }
 
   const token = tokenStorage.getToken();
-  const authReq = token ? addAuthHeader(req, token.accessToken) : req;
+
+  // Если токена нет — отправляем запрос как есть: сервер вернёт 401,
+  // который обработается ниже.
+  const authReq = token
+    ? req.clone({ setHeaders: { Authorization: `Bearer ${token.accessToken}` } })
+    : req;
 
   return next(authReq).pipe(
     catchError((error: unknown) => {
@@ -47,53 +52,53 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      return handle401(req, next, tokenStorage, config, router, authHttp);
+      const currentToken = tokenStorage.getToken();
+
+      // Нет refresh-токена — сессия невосстановима, выходим из системы сразу.
+      if (!currentToken?.refreshToken) {
+        tokenStorage.clearToken();
+        void router.navigate([config.redirects.onUnauthenticated]);
+        return throwError(() => error);
+      }
+
+      // --- Refresh lock ---
+      // Если refresh ещё не запущен — создаём Observable и сохраняем в `refreshInProgress$`.
+      // `shareReplay(1)` гарантирует:
+      //   - один HTTP-вызов, сколько бы 401 ни пришло параллельно;
+      //   - опоздавшие подписчики мгновенно получают кешированный результат.
+      // `tap` сохраняет новую пару токенов ровно один раз — до replay.
+      // `catchError` здесь (а не у каждого подписчика) вызывает logout один раз.
+      // `finalize` сбрасывает флаг как при успехе, так и при ошибке.
+      if (!refreshInProgress$) {
+        refreshInProgress$ = authHttp.refreshToken(currentToken.refreshToken).pipe(
+          tap((response) => tokenStorage.setToken(response.token)),
+          catchError((refreshError) => {
+            tokenStorage.clearToken();
+            void router.navigate([config.redirects.onUnauthenticated]);
+
+            return throwError(() => refreshError);
+          }),
+          finalize(() => {
+            refreshInProgress$ = null;
+          }),
+          shareReplay(1),
+        );
+      }
+
+      // Все запросы (и создавший refresh, и параллельные ожидающие) подписываются
+      // на один `refreshInProgress$` и повторяют свой запрос после его завершения.
+      return refreshInProgress$.pipe(
+        switchMap(() => {
+          const newToken = tokenStorage.getToken();
+          const retryReq = newToken
+            ? req.clone({ setHeaders: { Authorization: `Bearer ${newToken.accessToken}` } })
+            : req;
+          return next(retryReq);
+        }),
+        // Refresh упал — logout уже вызван внутри `refreshInProgress$`,
+        // здесь только пробрасываем исходную ошибку 401 вызывающему коду.
+        catchError(() => throwError(() => error)),
+      );
     }),
   );
 };
-
-function handle401(
-  req: HttpRequest<unknown>,
-  next: HttpHandlerFn,
-  tokenStorage: TokenStorageService,
-  config: IAuthConfig,
-  router: Router,
-  authHttp: AuthHttpService,
-): Observable<HttpEvent<unknown>> {
-  const currentToken = tokenStorage.getToken();
-
-  if (!currentToken?.refreshToken) {
-    tokenStorage.clearToken();
-    void router.navigate([config.redirects.onUnauthenticated]);
-    return throwError(() => new Error('No refresh token'));
-  }
-
-  if (isRefreshing) {
-    return new Observable((observer) => {
-      refreshQueue.push(() => {
-        const newToken = tokenStorage.getToken();
-        const retryReq = newToken ? addAuthHeader(req, newToken.accessToken) : req;
-        next(retryReq).subscribe(observer);
-      });
-    });
-  }
-
-  isRefreshing = true;
-
-  return authHttp.refreshToken(currentToken.refreshToken).pipe(
-    switchMap((response) => {
-      tokenStorage.setToken(response.token);
-      isRefreshing = false;
-      flushQueue();
-
-      return next(addAuthHeader(req, response.token.accessToken));
-    }),
-    catchError((refreshError) => {
-      isRefreshing = false;
-      refreshQueue = [];
-      tokenStorage.clearToken();
-      void router.navigate([config.redirects.onUnauthenticated]);
-      return throwError(() => refreshError);
-    }),
-  );
-}
