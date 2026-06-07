@@ -28,28 +28,31 @@ Before implementing any feature, check `docs/` for an existing spec. New feature
 
 ```
 src/
-  app/
-    core/          # инфраструктура: guards, interceptors, токены, app-env
+  app/             # точка входа: app.component, app.config-resolver, app.routes
+  features/        # all business features
+  layouts/         # wrapper components: public/ (unauthenticated) and internal/ (sidebar + auth)
+  shared/
     api/           # общий HTTP-слой: все сервисы с providedIn: 'root'
-    layouts/       # wrapper components: public/ (unauthenticated) and internal/ (sidebar + auth)
-    features/      # all business features
-  ui-kit/          # reusable UI components with no business logic
+    auth/          # guards, interceptors, token model, auth service
+    core/          # инфраструктура приложения (app-env и др.)
+    models/        # базовые классы и типы (AControlValueAccessor, TNillable)
+    ui-kit/        # reusable UI components with no business logic
 ```
 
-### HTTP-слой (`api/`)
+### HTTP-слой (`shared/api/`)
 
-Все HTTP-сервисы с `providedIn: 'root'` живут в `api/` — даже если пока используются одной фичей. Причина: Angular tree-shaking удаляет неиспользуемые сервисы, поэтому штрафа за "раннее" размещение нет, зато не нужен рефакторинг при появлении второго потребителя.
+Все HTTP-сервисы с `providedIn: 'root'` живут в `shared/api/` — даже если пока используются одной фичей. Причина: Angular tree-shaking удаляет неиспользуемые сервисы, поэтому штрафа за "раннее" размещение нет, зато не нужен рефакторинг при появлении второго потребителя.
 
 ```
-api/
+shared/api/
   core/          # ApiService, buildParams, TQueryParams
   config/        # IApiConfig, API_CONFIG token, provideApiConfig()
   controllers/   # per-resource HTTP-сервисы (categories/, users/, …)
 ```
 
-Фичи не делают HTTP-запросы напрямую — только инжектят сервисы из `@api/controllers/*`.
+Фичи не делают HTTP-запросы напрямую — только инжектят сервисы из `@shared/api/*`.
 
-### Контроллер (`api/controllers/<resource>/`)
+### Контроллер (`shared/api/controllers/<resource>/`)
 
 | Слой | Назначение |
 |---|---|
@@ -62,7 +65,7 @@ api/
 
 ### Core modules
 
-Each module under `core/` follows the same layer structure as features, with `config/` instead of `pages/`:
+Each module under `shared/core/` follows the same layer structure as features, with `config/` instead of `pages/`:
 
 | Layer | Purpose |
 |---|---|
@@ -71,22 +74,28 @@ Each module under `core/` follows the same layer structure as features, with `co
 | `mappers/` | Data transformation (DTO → domain model) |
 | `models/` | Domain model classes |
 
-Each `core/` module exports everything through a barrel `index.ts`. Import via path alias:
+Each module exports everything through a barrel `index.ts`. Import via path alias:
 
 ```ts
-import { AppEnvironment, provideAppEnvironment } from '@core/app-env';
+import { AppEnvironment, provideAppEnvironment } from '@shared/core/app-env';
 ```
 
-Currently registered aliases (defined in `tsconfig.app.json` and `tsconfig.spec.json`):
+### Path aliases
+
+Defined in `tsconfig.app.json` and `tsconfig.spec.json`. Both require `"baseUrl": "."`.
 
 | Alias | Module |
 |---|---|
-| `@core/app-env` | `src/app/core/app-environment/` |
-| `@api/core` | `src/app/api/core/` |
-| `@api/config` | `src/app/api/config/` |
-| `@api/*` | `src/app/api/controllers/*/index.ts` |
+| `@shared/core/app-env` | `src/shared/core/app-environment/` |
+| `@shared/api/core` | `src/shared/api/core/` |
+| `@shared/api/config` | `src/shared/api/config/` |
+| `@shared/api/*` | `src/shared/api/controllers/*/index.ts` |
+| `@shared/auth` | `src/shared/auth/` |
+| `@shared/ui-kit/*` | `src/shared/ui-kit/*/index.ts` |
+| `@layouts/*` | `src/layouts/*/index.ts` |
+| `@features/*` | `src/features/*/index.ts` |
 
-When adding a new alias, register it in both `tsconfig.app.json` and `tsconfig.spec.json`. Both require `"baseUrl": "."` for `paths` to resolve correctly.
+When adding a new alias, register it in both tsconfig files.
 
 ### Feature layer rules
 
@@ -96,7 +105,7 @@ Every feature under `features/` must follow this layer structure:
 |---|---|
 | `pages/` | Routable components — one per route, placed directly in the router |
 | `components/` | Child components and dialogs used within the feature |
-| `services/` | Local state, signals store, utilities (не HTTP — только инжект из `@api`) |
+| `services/` | Local state, signals store, utilities (не HTTP — только инжект из `@shared/api/*`) |
 | `models/interfaces/` | TypeScript interfaces (`I`-prefix) |
 | `models/types/` | Type aliases (`T`-prefix) |
 | `models/enums/` | Enums (`E`-prefix) |
@@ -112,15 +121,15 @@ Never put HTTP logic in components. Never put UI state in services (keep it in t
 ### Routing
 
 ```
-/login         → PublicLayout  → features/auth/pages/login
-/categories    → InternalLayout (authGuard) → features/categories/pages/categories-list
+/login         → PublicLayout  → features/feature-login/pages/login-page
+/categories    → InternalLayout (authGuard) → features/feature-categories/pages/category-list-page
 /              → redirect → /categories
 ```
 
 ### UI
 
 - No UI component library — all components are built from scratch to match Figma designs.
-- Shared primitives (table, dialog, form-field, search-input) live in `ui-kit/`.
+- Shared primitives (table, dialog, form-field, search-input) live in `shared/ui-kit/`.
 - Add/Edit/Delete actions open as modal dialogs — no separate routes for them.
 
 ## Architecture
@@ -138,14 +147,11 @@ Angular 21 standalone application. Entry point: `src/main.ts` → `app.config-re
 `proxy.conf.json` проксирует `/api/*` → `https://zidium3-backend.zidium.net/*` (стрипает `/api` prefix).
 `public/environment.json` использует `"apiUrl": "/api"` для dev-режима.
 
-**`src/app/`** — features and pages  
-**`src/ui-kit/`** — shared design system components (selectors prefixed `ui-kit-` / `uiKit*`)
-
 ## Angular Conventions
 
 `angular.json` schematics enforce these defaults for all generated code — do not override:
 - `OnPush` change detection
-- Standalone components
+- Standalone components and pipes
 - SCSS styles
 
 Use `inject()` over constructor injection. Use signals (`signal()`, `computed()`) for component state — not RxJS Subject/BehaviorSubject.
@@ -158,7 +164,7 @@ Strict TypeScript is enabled (`strict: true` + `noImplicitReturns`, `noImplicitO
 
 ESLint enforces (all `error`):
 - **No `any`** — forbidden everywhere except `*.spec.ts`
-- **Explicit access modifiers** on all class members (`public` / `private` / `protected`)
+- **Explicit access modifiers** on all class members (`public` / `private` / `protected`) — конструкторы исключены
 - **`readonly`** on properties that are never reassigned
 - **Naming prefixes**: interfaces → `I`, type aliases → `T`, enums → `E`, enum members → `UPPER_CASE`
 - **Explicit return types** on functions (expressions and typed function expressions are exempt)

@@ -1,0 +1,22 @@
+<ui-kit-form-field>
+  @if (label(); as label) {
+    <label [for]="id()">{{ label }}</label>
+  }
+
+  @if (hasIcon()) {
+    <span class="search-icon" uiKitPrefix>
+      <ui-kit-icon name="search" [size]="16" />
+    </span>
+  }
+
+  <input
+    uiKitInput
+    [id]="id()"
+    [type]="type()"
+    [placeholder]="placeholder()"
+    [value]="value()"
+    [disabled]="isDisabled()"
+    (input)="onValueChange($event)"
+    (blur)="onBlur()"
+  />
+</ui-kit-form-field>

@@ -1,0 +1,16 @@
+<div class="modal-container">
+  <div class="modal-container__header">
+    <h2 class="modal-container__title">{{ title() }}</h2>
+    <button class="modal-container__close" type="button" (click)="close()">
+      <ui-kit-icon name="close" [size]="16" />
+    </button>
+  </div>
+
+  <div class="modal-container__body">
+    <ng-content />
+  </div>
+
+  <div class="modal-container__footer">
+    <ng-content select="[footer]" />
+  </div>
+</div>

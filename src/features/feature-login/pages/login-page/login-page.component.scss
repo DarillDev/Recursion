@@ -1,0 +1,40 @@
+:host {
+  display: contents;
+}
+
+.login-card {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  width: 439px;
+  padding: 25px 20px 20px;
+  border: 1px solid var(--color-stroke);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+}
+
+.login-card__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: 21px;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.login-card__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+}
+
+.login-card__error {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+}
+
+.login-card__action {
+  display: flex;
+  justify-content: center;
+}

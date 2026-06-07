@@ -1,0 +1,25 @@
+<div class="login-card">
+  <h1 class="login-card__title">Logon to Zidium</h1>
+
+  <form class="login-card__fields" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <ui-kit-input-field
+      formControlName="email"
+      label="Login"
+      type="text"
+    />
+
+    <ui-kit-input-field
+      formControlName="password"
+      label="Password"
+      type="password"
+    />
+
+    @if (loginError(); as error) {
+      <p class="login-card__error">{{ error }}</p>
+    }
+
+    <div class="login-card__action">
+      <ui-kit-button variant="primary" type="submit">Logon</ui-kit-button>
+    </div>
+  </form>
+</div>

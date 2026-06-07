@@ -1,0 +1,29 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+}
+
+label[uiKitLabel] {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-base);
+  color: var(--text-secondary);
+}
+
+.ui-kit-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  color: var(--text-primary);
+  background: transparent;
+
+  &::placeholder {
+    color: var(--color-stroke);
+  }
+}

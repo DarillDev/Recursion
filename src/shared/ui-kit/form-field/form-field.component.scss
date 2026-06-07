@@ -1,0 +1,57 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+}
+
+.ui-kit-form-field__wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  height: 40px;
+  padding: var(--padding-input-y) var(--padding-input-x);
+  border: 1px solid var(--color-stroke);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  cursor: text;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 91, 170, 0.1);
+  }
+
+  &--disabled {
+    background: var(--color-window);
+    cursor: not-allowed;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  &--error {
+    border-color: var(--color-error);
+
+    &:focus-within {
+      border-color: var(--color-error);
+      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+  }
+}
+
+.ui-kit-form-field__prefix,
+.ui-kit-form-field__suffix {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.ui-kit-form-field__hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+
+  &--error {
+    color: var(--color-error);
+  }
+}
