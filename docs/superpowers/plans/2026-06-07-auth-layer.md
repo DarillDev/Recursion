@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Реализовать самодостаточный слой авторизации `app/auth/` с JWT-хранилищем, HTTP-сервисом, interceptor (401 → refresh → retry), authGuard, publicGuard и DI-конфигом `provideAuth()`.
+**Goal:** Реализовать самодостаточный слой авторизации `app/auth/` с JWT-хранилищем, HTTP-сервисом, APP_INITIALIZER (проверка/обновление токена при старте), interceptor (401 → refresh → retry), authGuard, publicGuard и DI-конфигом `provideAuth()`.
 
-**Architecture:** `app/auth/` — изолированный top-level модуль без зависимостей от `app/api/` и `app/core/`. Делает HTTP-запросы напрямую через `HttpClient`, используя `authUrl` из `IAuthConfig`. Перехват 401 реализован через реактивную стратегию: interceptor перехватывает ошибку, делает refresh, повторяет запрос; параллельные 401 ставятся в очередь.
+**Architecture:** `app/auth/` — изолированный top-level модуль без зависимостей от `app/api/` и `app/core/`. Делает HTTP-запросы напрямую через `HttpClient`, используя `authUrl` из `IAuthConfig`. При старте приложения `APP_INITIALIZER` декодирует `exp` из JWT access-токена: если токен просрочен — делает refresh; если refresh не удался — очищает хранилище (guard перенаправит на `/login`). Перехват 401 в рантайме реализован через реактивную стратегию: interceptor перехватывает ошибку, делает refresh, повторяет запрос; параллельные 401 ставятся в очередь.
 
 **Tech Stack:** Angular 21, TypeScript strict, RxJS, Vitest, `@angular/core/testing` TestBed, `HttpTestingController`.
 
@@ -26,7 +26,9 @@
 | `src/app/auth/interfaces/auth-user.interface.ts` | create | `IAuthUser` |
 | `src/app/auth/interfaces/login-response.interface.ts` | create | `ILoginResponse` |
 | `src/app/auth/models/token.ts` | create | `Token` class |
-| `src/app/auth/config/provide-auth.function.ts` | create | `provideAuth()` |
+| `src/app/auth/utils/jwt.utils.ts` | create | `decodeJwtExp(token)` — читает `exp` из JWT payload |
+| `src/app/auth/services/auth-init/auth-init.service.ts` | create | `AuthInitService.initialize()` — APP_INITIALIZER логика |
+| `src/app/auth/config/provide-auth.function.ts` | create | `provideAuth()` + регистрация APP_INITIALIZER |
 | `src/app/auth/services/token-storage/token-storage.service.ts` | create | `TokenStorageService` |
 | `src/app/auth/services/token-storage/token-storage.service.spec.ts` | create | тесты |
 | `src/app/auth/services/auth-http/auth-http.service.ts` | create | `AuthHttpService` |
@@ -37,6 +39,8 @@
 | `src/app/auth/guards/public.guard.spec.ts` | create | тесты |
 | `src/app/auth/interceptors/auth.interceptor.ts` | create | `authInterceptor` |
 | `src/app/auth/interceptors/auth.interceptor.spec.ts` | create | тесты |
+| `src/app/auth/utils/jwt.utils.spec.ts` | create | тесты |
+| `src/app/auth/services/auth-init/auth-init.service.spec.ts` | create | тесты |
 | `src/app/auth/index.ts` | create | barrel |
 | `src/app/app.config-resolver.ts` | modify | добавить `provideAuth()` и `authInterceptor` |
 
@@ -271,7 +275,9 @@ export class Token implements IToken {
 }
 ```
 
-- [ ] **Step 7: `provideAuth()`**
+- [ ] **Step 7: `provideAuth()` — предварительная версия (без APP_INITIALIZER)**
+
+`APP_INITIALIZER` будет добавлен в Task 4 после реализации `AuthInitService`.
 
 Файл `src/app/auth/config/provide-auth.function.ts`:
 
@@ -293,7 +299,321 @@ git commit -m "feat(auth): add interfaces, models and DI config"
 
 ---
 
-## Task 4: TokenStorageService (TDD)
+## Task 4: JWT-утилита и AuthInitService (TDD)
+
+**Files:**
+- Create: `src/app/auth/utils/jwt.utils.ts`
+- Create: `src/app/auth/utils/jwt.utils.spec.ts`
+- Create: `src/app/auth/services/auth-init/auth-init.service.ts`
+- Create: `src/app/auth/services/auth-init/auth-init.service.spec.ts`
+- Modify: `src/app/auth/config/provide-auth.function.ts`
+
+### 4a: JWT-утилита
+
+- [ ] **Step 1: Написать тесты для `decodeJwtExp`**
+
+Файл `src/app/auth/utils/jwt.utils.spec.ts`:
+
+```ts
+import { decodeJwtExp } from './jwt.utils';
+
+function makeJwt(payload: object): string {
+  const encoded = btoa(JSON.stringify(payload))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+  return `header.${encoded}.signature`;
+}
+
+describe('decodeJwtExp', () => {
+  it('returns exp value from valid JWT', () => {
+    const exp = Math.floor(Date.now() / 1000) + 3600;
+    const token = makeJwt({ UserId: '2', exp });
+    expect(decodeJwtExp(token)).toBe(exp);
+  });
+
+  it('returns null for malformed token (not 3 parts)', () => {
+    expect(decodeJwtExp('not.a')).toBeNull();
+  });
+
+  it('returns null if payload is not valid base64', () => {
+    expect(decodeJwtExp('header.!!!.signature')).toBeNull();
+  });
+
+  it('returns null if exp is missing from payload', () => {
+    const token = makeJwt({ UserId: '2' });
+    expect(decodeJwtExp(token)).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 2: Запустить тесты — убедиться что FAIL**
+
+```bash
+npx ng test --include="src/app/auth/utils/jwt.utils.spec.ts" 2>&1 | tail -20
+```
+
+- [ ] **Step 3: Реализовать `decodeJwtExp`**
+
+Файл `src/app/auth/utils/jwt.utils.ts`:
+
+```ts
+export function decodeJwtExp(token: string): number | null {
+  const parts = token.split('.');
+
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))) as unknown;
+
+    if (typeof payload !== 'object' || payload === null || !('exp' in payload)) {
+      return null;
+    }
+
+    const { exp } = payload as { exp: unknown };
+    return typeof exp === 'number' ? exp : null;
+  } catch {
+    return null;
+  }
+}
+```
+
+- [ ] **Step 4: Запустить тесты — убедиться что PASS**
+
+```bash
+npx ng test --include="src/app/auth/utils/jwt.utils.spec.ts" 2>&1 | tail -20
+```
+
+Ожидание: 4 теста PASS.
+
+### 4b: AuthInitService
+
+Логика `initialize()`:
+1. Читает токен из `TokenStorageService`
+2. Если токена нет — завершается немедленно (`of(null)`)
+3. Декодирует `exp` из `accessToken`; если не удалось декодировать — считает токен просроченным
+4. Если токен ещё не просрочен (текущее время < exp) — завершается немедленно
+5. Если просрочен — вызывает `AuthHttpService.refreshToken()`
+   - Успех: сохраняет новый токен, завершается
+   - Ошибка: очищает токен, завершается без ошибки (guard перенаправит на login)
+
+- [ ] **Step 5: Написать тесты для `AuthInitService`**
+
+Файл `src/app/auth/services/auth-init/auth-init.service.spec.ts`:
+
+```ts
+import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { AuthInitService } from './auth-init.service';
+import { TokenStorageService } from '../token-storage/token-storage.service';
+import { AUTH_CONFIG } from '../../config/auth-config.token';
+
+const CONFIG = {
+  authUrl: 'https://auth.example.com',
+  redirects: { onUnauthenticated: '/login', onAuthenticated: '/categories' },
+};
+
+function makeJwt(expOffsetSeconds: number): string {
+  const exp = Math.floor(Date.now() / 1000) + expOffsetSeconds;
+  const payload = btoa(JSON.stringify({ UserId: '2', exp }))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+  return `header.${payload}.sig`;
+}
+
+const REFRESH_RESPONSE = {
+  user: { displayName: 'test', timezoneOffset: '03:00:00' },
+  token: 'new-access',
+  refreshToken: 'new-refresh',
+};
+
+describe('AuthInitService', () => {
+  let service: AuthInitService;
+  let tokenStorage: TokenStorageService;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AUTH_CONFIG, useValue: CONFIG },
+      ],
+    });
+    service = TestBed.inject(AuthInitService);
+    tokenStorage = TestBed.inject(TokenStorageService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  it('completes immediately when no token in storage', (done) => {
+    service.initialize().subscribe({ complete: () => done() });
+    httpMock.expectNone(`${CONFIG.authUrl}/front/logon/refresh-token`);
+  });
+
+  it('completes immediately when access token is not expired', (done) => {
+    const validToken = makeJwt(+3600);
+    tokenStorage.setToken({ accessToken: validToken, refreshToken: 'ref' });
+
+    service.initialize().subscribe({ complete: () => done() });
+    httpMock.expectNone(`${CONFIG.authUrl}/front/logon/refresh-token`);
+  });
+
+  it('refreshes and stores new token when access token is expired', (done) => {
+    const expiredToken = makeJwt(-60);
+    tokenStorage.setToken({ accessToken: expiredToken, refreshToken: 'old-refresh' });
+
+    service.initialize().subscribe({
+      complete: () => {
+        expect(tokenStorage.getToken()).toEqual({
+          accessToken: 'new-access',
+          refreshToken: 'new-refresh',
+        });
+        done();
+      },
+    });
+
+    const req = httpMock.expectOne(`${CONFIG.authUrl}/front/logon/refresh-token`);
+    expect(req.request.body).toEqual({ refreshToken: 'old-refresh' });
+    req.flush(REFRESH_RESPONSE);
+  });
+
+  it('clears token and completes without error when refresh fails', (done) => {
+    const expiredToken = makeJwt(-60);
+    tokenStorage.setToken({ accessToken: expiredToken, refreshToken: 'old-refresh' });
+
+    service.initialize().subscribe({
+      complete: () => {
+        expect(tokenStorage.getToken()).toBeNull();
+        done();
+      },
+      error: () => done.fail('should not error'),
+    });
+
+    httpMock
+      .expectOne(`${CONFIG.authUrl}/front/logon/refresh-token`)
+      .flush({}, { status: 401, statusText: 'Unauthorized' });
+  });
+
+  it('treats token with undecodable exp as expired and attempts refresh', (done) => {
+    tokenStorage.setToken({ accessToken: 'not.a.jwt', refreshToken: 'ref' });
+
+    service.initialize().subscribe({ complete: () => done() });
+
+    httpMock
+      .expectOne(`${CONFIG.authUrl}/front/logon/refresh-token`)
+      .flush(REFRESH_RESPONSE);
+  });
+});
+```
+
+- [ ] **Step 6: Запустить тесты — убедиться что FAIL**
+
+```bash
+npx ng test --include="src/app/auth/services/auth-init/auth-init.service.spec.ts" 2>&1 | tail -20
+```
+
+- [ ] **Step 7: Реализовать `AuthInitService`**
+
+Файл `src/app/auth/services/auth-init/auth-init.service.ts`:
+
+```ts
+import { inject, Injectable } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { TokenStorageService } from '../token-storage/token-storage.service';
+import { AuthHttpService } from '../auth-http/auth-http.service';
+import { decodeJwtExp } from '../../utils/jwt.utils';
+
+@Injectable({ providedIn: 'root' })
+export class AuthInitService {
+  private readonly tokenStorage = inject(TokenStorageService);
+  private readonly authHttp = inject(AuthHttpService);
+
+  public initialize(): Observable<null> {
+    const token = this.tokenStorage.getToken();
+
+    if (!token) {
+      return of(null);
+    }
+
+    const exp = decodeJwtExp(token.accessToken);
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const isExpired = exp === null || nowSeconds >= exp;
+
+    if (!isExpired) {
+      return of(null);
+    }
+
+    return this.authHttp.refreshToken(token.refreshToken).pipe(
+      map((response) => {
+        this.tokenStorage.setToken(response.token);
+        return null;
+      }),
+      catchError(() => {
+        this.tokenStorage.clearToken();
+        return of(null);
+      }),
+    );
+  }
+}
+```
+
+- [ ] **Step 8: Запустить тесты — убедиться что PASS**
+
+```bash
+npx ng test --include="src/app/auth/services/auth-init/auth-init.service.spec.ts" 2>&1 | tail -20
+```
+
+Ожидание: 5 тестов PASS.
+
+- [ ] **Step 9: Обновить `provideAuth()` — добавить `APP_INITIALIZER`**
+
+Файл `src/app/auth/config/provide-auth.function.ts`:
+
+```ts
+import { APP_INITIALIZER, EnvironmentProviders, inject, makeEnvironmentProviders } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { AUTH_CONFIG } from './auth-config.token';
+import { AuthInitService } from '../services/auth-init/auth-init.service';
+import type { IAuthConfig } from '../interfaces/auth-config.interface';
+
+export const provideAuth = (config: IAuthConfig): EnvironmentProviders =>
+  makeEnvironmentProviders([
+    { provide: AUTH_CONFIG, useValue: config },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => {
+        const authInit = inject(AuthInitService);
+        return (): Promise<null> => firstValueFrom(authInit.initialize());
+      },
+      multi: true,
+    },
+  ]);
+```
+
+- [ ] **Step 10: Проверить компиляцию**
+
+```bash
+npm run build 2>&1 | tail -20
+```
+
+- [ ] **Step 11: Commit**
+
+```bash
+git add src/app/auth/utils/ src/app/auth/services/auth-init/ src/app/auth/config/provide-auth.function.ts
+git commit -m "feat(auth): add APP_INITIALIZER with JWT expiry check and refresh"
+```
+
+---
+
+## Task 5: TokenStorageService (TDD)
 
 **Files:**
 - Create: `src/app/auth/services/token-storage/token-storage.service.ts`
@@ -405,7 +725,7 @@ git commit -m "feat(auth): implement TokenStorageService"
 
 ---
 
-## Task 5: AuthHttpService (TDD)
+## Task 6: AuthHttpService (TDD)
 
 **Files:**
 - Create: `src/app/auth/services/auth-http/auth-http.service.ts`
@@ -569,7 +889,7 @@ git commit -m "feat(auth): implement AuthHttpService"
 
 ---
 
-## Task 6: authGuard и publicGuard (TDD)
+## Task 7: authGuard и publicGuard (TDD)
 
 **Files:**
 - Create: `src/app/auth/guards/auth.guard.ts`
@@ -734,7 +1054,7 @@ git commit -m "feat(auth): implement authGuard and publicGuard"
 
 ---
 
-## Task 7: authInterceptor (TDD)
+## Task 8: authInterceptor (TDD)
 
 **Files:**
 - Create: `src/app/auth/interceptors/auth.interceptor.ts`
@@ -1026,7 +1346,7 @@ git commit -m "feat(auth): implement authInterceptor with refresh queue"
 
 ---
 
-## Task 8: Barrel и интеграция
+## Task 9: Barrel и интеграция
 
 **Files:**
 - Create: `src/app/auth/index.ts`
@@ -1043,6 +1363,7 @@ export { publicGuard } from './guards/public.guard';
 export { authInterceptor } from './interceptors/auth.interceptor';
 export { TokenStorageService } from './services/token-storage/token-storage.service';
 export { AuthHttpService } from './services/auth-http/auth-http.service';
+export { AuthInitService } from './services/auth-init/auth-init.service';
 export type { IAuthConfig } from './interfaces/auth-config.interface';
 export type { IToken } from './interfaces/token.interface';
 export type { IAuthUser } from './interfaces/auth-user.interface';

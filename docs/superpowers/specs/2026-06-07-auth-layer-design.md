@@ -140,6 +140,29 @@ clearToken(): void
 
 Ключи: `auth_access_token`, `auth_refresh_token`.
 
+### JWT-утилита
+
+Файл `utils/jwt.utils.ts`. Чистая функция без зависимостей:
+
+```ts
+decodeJwtExp(token: string): number | null
+```
+
+Декодирует base64url-payload JWT, возвращает значение поля `exp` (Unix timestamp в секундах) или `null` если токен нераспознаваемый или поле отсутствует.
+
+### AuthInitService
+
+`providedIn: 'root'`. Метод `initialize(): Observable<null>`:
+
+1. Нет токена в `TokenStorageService` → `of(null)` немедленно
+2. Есть токен → декодировать `exp` из `accessToken`
+3. `exp === null` или `now >= exp` → токен просрочен → вызвать `AuthHttpService.refreshToken()`
+   - Успех: сохранить новый токен, вернуть `of(null)`
+   - Ошибка: очистить токен через `clearToken()`, вернуть `of(null)` (не пробрасывать ошибку — guard перенаправит)
+4. Токен не просрочен → `of(null)` немедленно
+
+Регистрируется в `provideAuth()` через `APP_INITIALIZER` (factory возвращает `() => firstValueFrom(authInit.initialize())`). Angular ждёт завершения всех `APP_INITIALIZER` перед рендером первого маршрута.
+
 ### authGuard
 
 Функциональный `CanActivateFn`. Инжектит `TokenStorageService` и `AUTH_CONFIG`.
