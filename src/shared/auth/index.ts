@@ -1,4 +1,5 @@
 export { provideAuth } from './config/provide-auth.function';
+export { AUTH_CONFIG } from './config/auth-config.token';
 export { authGuard } from './guards/auth.guard';
 export { publicGuard } from './guards/public.guard';
 export { authInterceptor } from './interceptors/auth.interceptor';

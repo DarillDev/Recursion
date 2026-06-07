@@ -4,15 +4,18 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
-    "rootDir": "./src/app",
+    "rootDir": "./src",
     "types": ["vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@core/app-env": ["src/shared/core/app-environment/index.ts"],
-      "@api/core": ["src/shared/api/core/index.ts"],
-      "@api/config": ["src/shared/api/config/index.ts"],
-      "@api/*": ["src/shared/api/controllers/*/index.ts"],
-      "@auth": ["src/shared/auth"]
+      "@shared/core/app-env": ["src/shared/core/app-environment/index.ts"],
+      "@shared/api/core": ["src/shared/api/core/index.ts"],
+      "@shared/api/config": ["src/shared/api/config/index.ts"],
+      "@shared/api/*": ["src/shared/api/controllers/*/index.ts"],
+      "@shared/auth": ["src/shared/auth"],
+      "@shared/ui-kit/*": ["src/shared/ui-kit/*/index.ts"],
+      "@layouts/*": ["src/layouts/*/index.ts"],
+      "@features/*": ["src/features/*/index.ts"]
     }
   },
   "include": ["src/**/*.d.ts", "src/**/*.spec.ts"]
