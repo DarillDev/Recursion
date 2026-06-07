@@ -5,13 +5,13 @@ import {
   signal,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 import { AuthService } from 'src/shared/auth';
 import { InputFieldComponent } from '@shared/ui-kit/input/components/input-field';
+import { ButtonComponent } from '@shared/ui-kit/button';
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, InputFieldComponent],
+  imports: [ReactiveFormsModule, InputFieldComponent, ButtonComponent],
   templateUrl: './login-page.component.html',
   styleUrl: './login-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -19,7 +19,6 @@ import { InputFieldComponent } from '@shared/ui-kit/input/components/input-field
 export class LoginPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
 
   public readonly form = this.fb.nonNullable.group({
     email: ['test', [Validators.required]],
@@ -39,9 +38,6 @@ export class LoginPageComponent {
       const { email, password } = this.form.getRawValue();
 
       this.authService.login(email, password).subscribe({
-        next: () => {
-          void this.router.navigate(['/']);
-        },
         error: () => {
           this.loginError.set('Invalid credentials. Please try again.');
         },

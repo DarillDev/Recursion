@@ -1,7 +1,7 @@
 <nav class="sidebar__nav">
   <div class="sidebar__top">
     <button class="sidebar__item sidebar__toggle" type="button" aria-label="Toggle menu">
-      <ui-kit-icon [name]="EIconName.MENU_OPEN" [size]="20" />
+      <ui-kit-icon name="menu-open" [size]="20" />
     </button>
   </div>
 
@@ -12,17 +12,17 @@
       routerLinkActive="sidebar__item--active"
       aria-label="Categories"
     >
-      <ui-kit-icon [name]="EIconName.SETTINGS" [size]="20" />
+      <ui-kit-icon name="settings" [size]="20" />
     </a>
   </div>
 
   <div class="sidebar__bottom">
     <button class="sidebar__item" type="button" aria-label="Account">
-      <ui-kit-icon [name]="EIconName.ACCOUNT_CIRCLE" [size]="20" />
+      <ui-kit-icon name="account-circle" [size]="20" />
     </button>
 
-    <button class="sidebar__item" type="button" aria-label="Logout">
-      <ui-kit-icon [name]="EIconName.LOGOUT" [size]="20" />
+    <button class="sidebar__item" type="button" aria-label="Logout" (click)="onLogout()">
+      <ui-kit-icon name="logout" [size]="20" />
     </button>
   </div>
 </nav>

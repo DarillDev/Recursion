@@ -7,11 +7,15 @@ import type { ILoginResponse } from '../../interfaces/login-response.interface';
 import { Token } from '../../models/token';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 import { AuthApiService } from '../auth-api/auth-api.service';
+import { Router } from '@angular/router';
+import { AUTH_CONFIG } from '../../config/auth-config.token';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly tokenStorage = inject(TokenStorageService);
   private readonly authApi = inject(AuthApiService);
+  private readonly redirects = inject(AUTH_CONFIG).redirects;
+  private readonly router = inject(Router);
 
   // Инициализируем из localStorage один раз — дальнейшие обращения только к сигналу.
   private readonly _token = signal<Token | null>(this.tokenStorage.getToken());
@@ -19,18 +23,19 @@ export class AuthService {
   public readonly token = this._token.asReadonly();
   public readonly isAuthenticated = computed(() => this._token() !== null);
 
-  /** Выполняет вход, сохраняет токен в памяти и localStorage. */
-  public login(username: string, password: string): Observable<void> {
+  /** Выполняет вход, сохраняет токен и перенаправляет на защищённый маршрут. */
+  public login(username: string, password: string): Observable<ILoginResponse> {
     return this.authApi.login(username, password).pipe(
       tap((response) => this.saveToken(response.token)),
-      map(() => undefined),
+      tap(() => void this.router.navigate([this.redirects.onAuthenticated])),
     );
   }
 
-  /** Очищает токен из памяти и localStorage. */
+  /** Очищает токен и перенаправляет на страницу входа. */
   public logout(): void {
     this.tokenStorage.clearToken();
     this._token.set(null);
+    void this.router.navigate([this.redirects.onUnauthenticated]);
   }
 
   /**
@@ -51,6 +56,7 @@ export class AuthService {
 
   private saveToken(raw: IToken): void {
     const token = new Token(raw);
+
     this.tokenStorage.setToken(token);
     this._token.set(token);
   }

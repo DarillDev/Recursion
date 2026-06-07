@@ -7,9 +7,14 @@ export const PUBLIC_LAYOUT_ROUTES: Routes = [
     component: PublicLayoutComponent,
     children: [
       {
-        path: '',
+        path: 'login',
         loadChildren: () =>
           import('src/features/feature-login').then((m) => m.FEATURE_LOGIN_ROUTES),
+      },
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'login',
       },
     ],
   },

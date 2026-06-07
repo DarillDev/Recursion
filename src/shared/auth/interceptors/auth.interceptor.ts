@@ -1,7 +1,6 @@
 import { inject } from '@angular/core';
 import type { HttpInterceptorFn } from '@angular/common/http';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
 import type { Observable } from 'rxjs';
 import { throwError } from 'rxjs';
 import { catchError, finalize, shareReplay, switchMap } from 'rxjs/operators';
@@ -28,7 +27,6 @@ let refreshInProgress$: Observable<unknown> | null = null;
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const config = inject(AUTH_CONFIG);
   const authState = inject(AuthService);
-  const router = inject(Router);
 
   // Запросы к endpoints авторизации (login, refresh) не должны содержать
   // Bearer-заголовок — их пропускаем без модификации.
@@ -53,7 +51,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       // Нет refresh-токена — сессия невосстановима, выходим из системы сразу.
       if (!authState.token()?.refreshToken) {
         authState.logout();
-        void router.navigate([config.redirects.onUnauthenticated]);
         return throwError(() => error);
       }
 
@@ -69,7 +66,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         refreshInProgress$ = authState.refreshToken().pipe(
           catchError((refreshError) => {
             authState.logout();
-            void router.navigate([config.redirects.onUnauthenticated]);
             return throwError(() => refreshError);
           }),
           finalize(() => {

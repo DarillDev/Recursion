@@ -38,24 +38,3 @@
   display: flex;
   justify-content: center;
 }
-
-.login-btn {
-  padding: 10px 20px;
-  background: var(--color-primary);
-  color: var(--color-white);
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  line-height: var(--line-height-base);
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-
-  &:hover {
-    background: #004a8c;
-  }
-
-  &:active {
-    background: #003a6e;
-  }
-}

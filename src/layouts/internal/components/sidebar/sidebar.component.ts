@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '@shared/auth';
 import { IconComponent, EIconName } from '@shared/ui-kit/icon';
 
 @Component({
@@ -10,5 +11,9 @@ import { IconComponent, EIconName } from '@shared/ui-kit/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SidebarComponent {
-  protected readonly EIconName = EIconName;
+  private readonly authService = inject(AuthService);
+
+  public onLogout(): void {
+    this.authService.logout();
+  }
 }
