@@ -8,7 +8,10 @@
     "types": ["vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@core/app-env": ["src/app/core/app-environment/index.ts"]
+      "@core/app-env": ["src/app/core/app-environment/index.ts"],
+      "@api/core": ["src/app/api/core/index.ts"],
+      "@api/config": ["src/app/api/config/index.ts"],
+      "@api/*": ["src/app/api/controllers/*/index.ts"]
     }
   },
   "include": ["src/**/*.d.ts", "src/**/*.spec.ts"]

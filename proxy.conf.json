@@ -1,0 +1,11 @@
+{
+  "/api": {
+    "target": "https://zidium3-backend.zidium.net",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": ""
+    },
+    "logLevel": "debug"
+  }
+}

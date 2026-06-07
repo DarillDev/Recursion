@@ -29,11 +29,36 @@ Before implementing any feature, check `docs/` for an existing spec. New feature
 ```
 src/
   app/
-    core/          # shared infrastructure modules (app-environment, guards, interceptors)
+    core/          # инфраструктура: guards, interceptors, токены, app-env
+    api/           # общий HTTP-слой: все сервисы с providedIn: 'root'
     layouts/       # wrapper components: public/ (unauthenticated) and internal/ (sidebar + auth)
     features/      # all business features
   ui-kit/          # reusable UI components with no business logic
 ```
+
+### HTTP-слой (`api/`)
+
+Все HTTP-сервисы с `providedIn: 'root'` живут в `api/` — даже если пока используются одной фичей. Причина: Angular tree-shaking удаляет неиспользуемые сервисы, поэтому штрафа за "раннее" размещение нет, зато не нужен рефакторинг при появлении второго потребителя.
+
+```
+api/
+  core/          # ApiService, buildParams, TQueryParams
+  config/        # IApiConfig, API_CONFIG token, provideApiConfig()
+  controllers/   # per-resource HTTP-сервисы (categories/, users/, …)
+```
+
+Фичи не делают HTTP-запросы напрямую — только инжектят сервисы из `@api/controllers/*`.
+
+### Контроллер (`api/controllers/<resource>/`)
+
+| Слой | Назначение |
+|---|---|
+| `dtos/` | Формы ответа сервера (не менять без сверки со Swagger) |
+| `interfaces/` | Доменные модели |
+| `services/<resource>-api/` | Сырые HTTP-вызовы через `ApiService` |
+| `services/<resource>/` | Публичное API с маппингом для фич |
+| `index.ts` | Barrel — единственная точка импорта |
+| `README.md` | Swagger-ссылка, таблица endpoints, описание методов |
 
 ### Core modules
 
@@ -57,6 +82,9 @@ Currently registered aliases (defined in `tsconfig.app.json` and `tsconfig.spec.
 | Alias | Module |
 |---|---|
 | `@core/app-env` | `src/app/core/app-environment/` |
+| `@api/core` | `src/app/api/core/` |
+| `@api/config` | `src/app/api/config/` |
+| `@api/*` | `src/app/api/controllers/*/index.ts` |
 
 When adding a new alias, register it in both `tsconfig.app.json` and `tsconfig.spec.json`. Both require `"baseUrl": "."` for `paths` to resolve correctly.
 
@@ -68,7 +96,7 @@ Every feature under `features/` must follow this layer structure:
 |---|---|
 | `pages/` | Routable components — one per route, placed directly in the router |
 | `components/` | Child components and dialogs used within the feature |
-| `services/` | Any services: HTTP calls, signals store, utilities |
+| `services/` | Local state, signals store, utilities (не HTTP — только инжект из `@api`) |
 | `models/interfaces/` | TypeScript interfaces (`I`-prefix) |
 | `models/types/` | Type aliases (`T`-prefix) |
 | `models/enums/` | Enums (`E`-prefix) |
@@ -102,6 +130,13 @@ Angular 21 standalone application. Entry point: `src/main.ts` → `app.config-re
 **Bootstrap strategy (`main.ts`):** `environment.json` (fetch) and `app.config-resolver` (dynamic `import()`) are loaded in parallel via `Promise.all`. The resolver is a separate lazy chunk — a static import would bloat the main bundle and force sequential loading. Do not convert it to a static import.
 
 **`app.config-resolver.ts`** — a factory `(env: AppEnvironment) => ApplicationConfig`. Keeps all providers in a lazy chunk; receives the resolved environment and returns the full Angular config passed to `bootstrapApplication()`.
+
+**Обязательные провайдеры:** `provideHttpClient()` — без него `HttpClient` не работает.
+
+### Dev proxy
+
+`proxy.conf.json` проксирует `/api/*` → `https://zidium3-backend.zidium.net/*` (стрипает `/api` prefix).
+`public/environment.json` использует `"apiUrl": "/api"` для dev-режима.
 
 **`src/app/`** — features and pages  
 **`src/ui-kit/`** — shared design system components (selectors prefixed `ui-kit-` / `uiKit*`)
