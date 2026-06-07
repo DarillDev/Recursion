@@ -4,11 +4,11 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import type { AppEnvironment } from '@core/app-env';
-import { provideAppEnvironment } from '@core/app-env';
-import type { IApiConfig } from '@api/config';
-import { provideApiConfig } from '@api/config';
-import { authInterceptor, IAuthConfig, provideAuth } from '@auth';
+import type { AppEnvironment } from 'src/shared/core/app-environment';
+import { provideAppEnvironment } from 'src/shared/core/app-environment';
+import type { IApiConfig } from 'src/shared/api/config';
+import { provideApiConfig } from 'src/shared/api/config';
+import { authInterceptor, IAuthConfig, provideAuth } from 'src/shared/auth';
 
 export const appConfigResolver = (appEnvironment: AppEnvironment): ApplicationConfig => {
   const apiConfig: IApiConfig = { baseUrl: appEnvironment.apiUrl };

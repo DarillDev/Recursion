@@ -7,7 +7,8 @@ export const PUBLIC_LAYOUT_ROUTES: Routes = [
     children: [
       {
         path: 'login',
-        loadChildren: () => import('@features/feature-login').then((m) => m.FEATURE_LOGIN_ROUTES),
+        loadChildren: () =>
+          import('src/features/feature-login').then((m) => m.FEATURE_LOGIN_ROUTES),
       },
     ],
   },

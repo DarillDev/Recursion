@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from '@auth';
+import { AuthService } from 'src/shared/auth';
 
 @Component({
   selector: 'app-login-page',
