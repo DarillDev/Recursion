@@ -1,1 +1,17 @@
-/* You can add global styles to this file, and also import other style files */
+@use 'styles/fonts';
+@use 'styles/tokens';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  color: var(--text-primary);
+  background: var(--color-white);
+}
