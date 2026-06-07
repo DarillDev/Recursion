@@ -29,11 +29,36 @@ Before implementing any feature, check `docs/` for an existing spec. New feature
 ```
 src/
   app/
-    core/          # global guards, interceptors, shared models, constants
+    core/          # shared infrastructure modules (app-environment, guards, interceptors)
     layouts/       # wrapper components: public/ (unauthenticated) and internal/ (sidebar + auth)
     features/      # all business features
   ui-kit/          # reusable UI components with no business logic
 ```
+
+### Core modules
+
+Each module under `core/` follows the same layer structure as features, with `config/` instead of `pages/`:
+
+| Layer | Purpose |
+|---|---|
+| `config/` | Angular providers (`provideX`) for DI registration |
+| `interfaces/` | TypeScript interfaces (`I`-prefix) |
+| `mappers/` | Data transformation (DTO → domain model) |
+| `models/` | Domain model classes |
+
+Each `core/` module exports everything through a barrel `index.ts`. Import via path alias:
+
+```ts
+import { AppEnvironment, provideAppEnvironment } from '@core/app-env';
+```
+
+Currently registered aliases (defined in `tsconfig.app.json` and `tsconfig.spec.json`):
+
+| Alias | Module |
+|---|---|
+| `@core/app-env` | `src/app/core/app-environment/` |
+
+When adding a new alias, register it in both `tsconfig.app.json` and `tsconfig.spec.json`. Both require `"baseUrl": "."` for `paths` to resolve correctly.
 
 ### Feature layer rules
 
@@ -72,7 +97,11 @@ Never put HTTP logic in components. Never put UI state in services (keep it in t
 
 ## Architecture
 
-Angular 21 standalone application. Entry point: `src/main.ts` → `app.config.ts` → `app.routes.ts`.
+Angular 21 standalone application. Entry point: `src/main.ts` → `app.config-resolver.ts` → `app.routes.ts`.
+
+**Bootstrap strategy (`main.ts`):** `environment.json` (fetch) and `app.config-resolver` (dynamic `import()`) are loaded in parallel via `Promise.all`. The resolver is a separate lazy chunk — a static import would bloat the main bundle and force sequential loading. Do not convert it to a static import.
+
+**`app.config-resolver.ts`** — a factory `(env: AppEnvironment) => ApplicationConfig`. Keeps all providers in a lazy chunk; receives the resolved environment and returns the full Angular config passed to `bootstrapApplication()`.
 
 **`src/app/`** — features and pages  
 **`src/ui-kit/`** — shared design system components (selectors prefixed `ui-kit-` / `uiKit*`)
@@ -106,6 +135,8 @@ ESLint enforces (all `error`):
 ## Code Style
 
 Prettier: single quotes, 100-char line width, Angular HTML parser for templates.
+
+Doc comments (`/** */`) are written in Russian. Single-line `//` comments — only for non-obvious WHY, not WHAT.
 
 ## MCP Servers
 

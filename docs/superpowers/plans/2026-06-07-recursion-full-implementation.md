@@ -252,7 +252,7 @@ JWT: хранение токена, вход, выход, автообновле
 **Figma:** макет диалога добавления/редактирования
 
 **Создать:**
-- `src/ui-kit/dialog/dialog.component.ts` — selector `ui-kit-dialog`, input `title`, output `closed`; Esc через `@HostListener`
+- `src/ui-kit/dialog/dialog.component.ts` — selector `ui-kit-dialog`, input `title`, output `closed`; Esc через `host: { '(keydown.escape)': 'onEsc()' }`
 - `src/ui-kit/dialog/dialog.component.html` — backdrop + panel: header + `<ng-content>` + `<ng-content select="[footer]">`
 - `src/ui-kit/dialog/dialog.component.scss`
 - `src/ui-kit/dialog/dialog.service.ts` — `open<T>(component, data?)` через `createComponent` + `ApplicationRef`

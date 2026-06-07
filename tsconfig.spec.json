@@ -5,7 +5,11 @@
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
     "rootDir": "./src/app",
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@core/app-env": ["src/app/core/app-environment/index.ts"]
+    }
   },
   "include": ["src/**/*.d.ts", "src/**/*.spec.ts"]
 }
