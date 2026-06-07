@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { AuthHttpService } from './auth-http.service';
+import { AuthApiService } from './auth-api.service';
 import { AUTH_CONFIG } from '../../config/auth-config.token';
 import type { ILoginResponse } from '../../interfaces/login-response.interface';
 
@@ -16,8 +16,8 @@ const SERVER_RESPONSE = {
   refreshToken: 'refresh-token-value',
 };
 
-describe('AuthHttpService', () => {
-  let service: AuthHttpService;
+describe('AuthApiService', () => {
+  let service: AuthApiService;
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
@@ -28,7 +28,7 @@ describe('AuthHttpService', () => {
         { provide: AUTH_CONFIG, useValue: CONFIG },
       ],
     });
-    service = TestBed.inject(AuthHttpService);
+    service = TestBed.inject(AuthApiService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 

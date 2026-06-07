@@ -1,4 +1,5 @@
 import { TokenStorageService } from './token-storage.service';
+import { Token } from '../../models/token';
 
 describe('TokenStorageService', () => {
   let service: TokenStorageService;
@@ -17,9 +18,12 @@ describe('TokenStorageService', () => {
     expect(service.getToken()).toBeNull();
   });
 
-  it('stores and retrieves token', () => {
+  it('stores and retrieves token as Token instance', () => {
     service.setToken({ accessToken: 'acc', refreshToken: 'ref' });
-    expect(service.getToken()).toEqual({ accessToken: 'acc', refreshToken: 'ref' });
+    const token = service.getToken();
+    expect(token).toBeInstanceOf(Token);
+    expect(token?.accessToken).toBe('acc');
+    expect(token?.refreshToken).toBe('ref');
   });
 
   it('clears token', () => {
@@ -33,6 +37,8 @@ describe('TokenStorageService', () => {
   it('overwrites existing token on setToken', () => {
     service.setToken({ accessToken: 'old', refreshToken: 'old-ref' });
     service.setToken({ accessToken: 'new', refreshToken: 'new-ref' });
-    expect(service.getToken()).toEqual({ accessToken: 'new', refreshToken: 'new-ref' });
+    const token = service.getToken();
+    expect(token?.accessToken).toBe('new');
+    expect(token?.refreshToken).toBe('new-ref');
   });
 });

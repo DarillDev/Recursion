@@ -4,8 +4,8 @@ export { publicGuard } from './guards/public.guard';
 export { authInterceptor } from './interceptors/auth.interceptor';
 
 export { TokenStorageService } from './services/token-storage/token-storage.service';
-export { AuthHttpService } from './services/auth-http/auth-http.service';
-export { AuthInitService } from './services/auth-init/auth-init.service';
+export { AuthApiService } from './services/auth-api/auth-api.service';
+export { AuthStateService } from './services/auth-state/auth-state.service';
 
 export type { IAuthConfig } from './interfaces/auth-config.interface';
 export type { IToken } from './interfaces/token.interface';

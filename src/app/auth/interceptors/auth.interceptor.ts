@@ -4,9 +4,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import type { Observable } from 'rxjs';
 import { throwError } from 'rxjs';
-import { catchError, finalize, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { catchError, finalize, shareReplay, switchMap } from 'rxjs/operators';
 import { AUTH_CONFIG } from '../config/auth-config.token';
-import { AuthHttpService } from '../services/auth-http/auth-http.service';
+import { AuthStateService } from '../services/auth-state/auth-state.service';
 import { TokenStorageService } from '../services/token-storage/token-storage.service';
 
 /**
@@ -29,7 +29,7 @@ let refreshInProgress$: Observable<unknown> | null = null;
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const config = inject(AUTH_CONFIG);
   const tokenStorage = inject(TokenStorageService);
-  const authHttp = inject(AuthHttpService);
+  const authState = inject(AuthStateService);
   const router = inject(Router);
 
   // Запросы к endpoints авторизации (login, refresh) не должны содержать
@@ -52,10 +52,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      const currentToken = tokenStorage.getToken();
-
       // Нет refresh-токена — сессия невосстановима, выходим из системы сразу.
-      if (!currentToken?.refreshToken) {
+      if (!tokenStorage.getToken()?.refreshToken) {
         tokenStorage.clearToken();
         void router.navigate([config.redirects.onUnauthenticated]);
         return throwError(() => error);
@@ -66,16 +64,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       // `shareReplay(1)` гарантирует:
       //   - один HTTP-вызов, сколько бы 401 ни пришло параллельно;
       //   - опоздавшие подписчики мгновенно получают кешированный результат.
-      // `tap` сохраняет новую пару токенов ровно один раз — до replay.
+      // `authState.refreshToken()` сохраняет токен внутри — до replay.
       // `catchError` здесь (а не у каждого подписчика) вызывает logout один раз.
       // `finalize` сбрасывает флаг как при успехе, так и при ошибке.
       if (!refreshInProgress$) {
-        refreshInProgress$ = authHttp.refreshToken(currentToken.refreshToken).pipe(
-          tap((response) => tokenStorage.setToken(response.token)),
+        refreshInProgress$ = authState.refreshToken().pipe(
           catchError((refreshError) => {
             tokenStorage.clearToken();
             void router.navigate([config.redirects.onUnauthenticated]);
-
             return throwError(() => refreshError);
           }),
           finalize(() => {
@@ -87,7 +83,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
       // Все запросы (и создавший refresh, и параллельные ожидающие) подписываются
       // на один `refreshInProgress$` и повторяют свой запрос после его завершения.
-      return refreshInProgress$.pipe(
+      return (refreshInProgress$ as Observable<unknown>).pipe(
         switchMap(() => {
           const newToken = tokenStorage.getToken();
           const retryReq = newToken

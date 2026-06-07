@@ -13,19 +13,19 @@ interface ILoginResponseDto {
 }
 
 @Injectable({ providedIn: 'root' })
-export class AuthHttpService {
+export class AuthApiService {
   private readonly http = inject(HttpClient);
-  private readonly config = inject(AUTH_CONFIG);
+  private readonly authUrl = inject(AUTH_CONFIG).authUrl;
 
   public login(login: string, password: string): Observable<ILoginResponse> {
     return this.http
-      .post<ILoginResponseDto>(`${this.config.authUrl}/front/logon`, { login, password })
+      .post<ILoginResponseDto>(`${this.authUrl}/front/logon`, { login, password })
       .pipe(map((dto) => this.mapDto(dto)));
   }
 
   public refreshToken(refreshToken: string): Observable<ILoginResponse> {
     return this.http
-      .post<ILoginResponseDto>(`${this.config.authUrl}/front/logon/refresh-token`, { refreshToken })
+      .post<ILoginResponseDto>(`${this.authUrl}/front/logon/refresh-token`, { refreshToken })
       .pipe(map((dto) => this.mapDto(dto)));
   }
 

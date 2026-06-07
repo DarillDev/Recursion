@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import type { IToken } from '../../interfaces/token.interface';
+import { Token } from '../../models/token';
 
 const ACCESS_KEY = 'auth_access_token';
 const REFRESH_KEY = 'auth_refresh_token';
 
 @Injectable({ providedIn: 'root' })
 export class TokenStorageService {
-  public getToken(): IToken | null {
+  public getToken(): Token | null {
     const accessToken = localStorage.getItem(ACCESS_KEY);
     const refreshToken = localStorage.getItem(REFRESH_KEY);
 
@@ -14,7 +15,7 @@ export class TokenStorageService {
       return null;
     }
 
-    return { accessToken, refreshToken };
+    return new Token(accessToken, refreshToken);
   }
 
   public setToken(token: IToken): void {
