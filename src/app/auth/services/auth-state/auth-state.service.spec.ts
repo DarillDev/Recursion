@@ -12,14 +12,6 @@ const CONFIG = {
   redirects: { onUnauthenticated: '/login', onAuthenticated: '/categories' },
 };
 
-function makeJwt(expOffsetSeconds: number): string {
-  const exp = Math.floor(Date.now() / 1000) + expOffsetSeconds;
-  const payload = btoa(JSON.stringify({ UserId: '2', exp }))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-  return `header.${payload}.sig`;
-}
 
 const REFRESH_RESPONSE = {
   user: { displayName: 'test', timezoneOffset: '03:00:00' },
@@ -115,54 +107,6 @@ describe('AuthStateService', () => {
       service.logout();
 
       expect(service.token()).toBeNull();
-      expect(tokenStorage.getToken()).toBeNull();
-    });
-  });
-
-  describe('initialize()', () => {
-    it('completes immediately when no token in storage', async () => {
-      await firstValueFrom(service.initialize());
-      httpMock.expectNone(`${CONFIG.authUrl}/front/logon/refresh-token`);
-    });
-
-    it('completes immediately when access token is not expired', async () => {
-      tokenStorage.setToken({ accessToken: makeJwt(+3600), refreshToken: 'ref' });
-      // Re-create service so signal reads the stored token
-      const freshService = TestBed.runInInjectionContext(() => new AuthStateService());
-
-      await firstValueFrom(freshService.initialize());
-      httpMock.expectNone(`${CONFIG.authUrl}/front/logon/refresh-token`);
-    });
-
-    it('refreshes and stores new token when access token is expired', async () => {
-      tokenStorage.setToken({ accessToken: makeJwt(-60), refreshToken: 'old-refresh' });
-      const freshService = TestBed.runInInjectionContext(() => new AuthStateService());
-
-      const result = firstValueFrom(freshService.initialize());
-
-      const req = httpMock.expectOne(`${CONFIG.authUrl}/front/logon/refresh-token`);
-      expect(req.request.body).toEqual({ refreshToken: 'old-refresh' });
-      req.flush(REFRESH_RESPONSE);
-
-      await result;
-
-      expect(freshService.token()?.accessToken).toBe('new-access');
-      expect(tokenStorage.getToken()?.accessToken).toBe('new-access');
-    });
-
-    it('clears token and completes without error when refresh fails', async () => {
-      tokenStorage.setToken({ accessToken: makeJwt(-60), refreshToken: 'old-refresh' });
-      const freshService = TestBed.runInInjectionContext(() => new AuthStateService());
-
-      const result = firstValueFrom(freshService.initialize());
-
-      httpMock
-        .expectOne(`${CONFIG.authUrl}/front/logon/refresh-token`)
-        .flush({}, { status: 401, statusText: 'Unauthorized' });
-
-      await result;
-
-      expect(freshService.token()).toBeNull();
       expect(tokenStorage.getToken()).toBeNull();
     });
   });

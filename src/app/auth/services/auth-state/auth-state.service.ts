@@ -1,8 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { of, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
-import type { IToken } from '../../interfaces/token.interface';
+import { throwError } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import type { ILoginResponse } from '../../interfaces/login-response.interface';
 import { Token } from '../../models/token';
 import { TokenStorageService } from '../token-storage/token-storage.service';
@@ -19,35 +18,14 @@ export class AuthStateService {
   public readonly token = this._token.asReadonly();
   public readonly isAuthenticated = computed(() => this._token() !== null);
 
-  /**
-   * Вызывается при старте приложения.
-   * Если токен просрочен — пробует обновить; при ошибке очищает хранилище.
-   * Всегда завершается без ошибки, чтобы не блокировать bootstrap.
-   */
-  public initialize(): Observable<null> {
-    const token = this._token();
-
-    if (!token) {
-      return of(null);
-    }
-
-    if (!token.isExpired) {
-      return of(null);
-    }
-
-    return this.refreshToken().pipe(
-      map(() => null),
-      catchError(() => {
-        this.logout();
-        return of(null);
-      }),
-    );
-  }
-
   /** Выполняет вход, сохраняет токен в памяти и localStorage. */
   public login(username: string, password: string): Observable<void> {
     return this.authApi.login(username, password).pipe(
-      tap((response) => this.saveToken(response.token)),
+      tap((response) => {
+        const newToken = new Token(response.token.accessToken, response.token.refreshToken);
+        this.tokenStorage.setToken(newToken);
+        this._token.set(newToken);
+      }),
       map(() => undefined),
     );
   }
@@ -63,20 +41,18 @@ export class AuthStateService {
    * При отсутствии refresh-токена бросает ошибку синхронно.
    */
   public refreshToken(): Observable<ILoginResponse> {
-    const token = this._token();
+    const currentToken = this._token();
 
-    if (!token?.refreshToken) {
+    if (!currentToken?.refreshToken) {
       return throwError(() => new Error('No refresh token'));
     }
 
-    return this.authApi.refreshToken(token.refreshToken).pipe(
-      tap((response) => this.saveToken(response.token)),
+    return this.authApi.refreshToken(currentToken.refreshToken).pipe(
+      tap((response) => {
+        const newToken = new Token(response.token.accessToken, response.token.refreshToken);
+        this.tokenStorage.setToken(newToken);
+        this._token.set(newToken);
+      }),
     );
-  }
-
-  private saveToken(raw: IToken): void {
-    const token = new Token(raw.accessToken, raw.refreshToken);
-    this.tokenStorage.setToken(token);
-    this._token.set(token);
   }
 }
