@@ -5,16 +5,7 @@ export type TButtonType = 'button' | 'submit' | 'reset';
 
 @Component({
   selector: 'ui-kit-button',
-  template: `
-    <button
-      class="btn"
-      [attr.data-variant]="variant()"
-      [type]="type()"
-      [disabled]="disabled() || null"
-    >
-      <ng-content />
-    </button>
-  `,
+  templateUrl: './button.component.html',
   styleUrl: './button.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
