@@ -1,102 +1,40 @@
 # Auth Layer Design
 
-## Обзор
+## Принципы
 
-Слой авторизации состоит из двух модулей:
-
-- **`api/controllers/auth/`** — HTTP-сервисы (login, refresh-token)
-- **`src/app/auth/`** — инфраструктура: хранение токена, interceptor, guard, конфиг
-
-Слой `auth` не знает ничего про конкретные роуты приложения — всё задаётся через `IAuthConfig` при регистрации.
+- `app/auth/` и `app/api/` — полностью независимые слои, ничего не знают друг о друге.
+- `app/auth/` делает HTTP-запросы самостоятельно через `HttpClient`, используя `authUrl` из своего конфига.
+- Конкретные роуты приложения (`/login`, `/categories`) не зашиты в `auth` — передаются снаружи через `IAuthConfig`.
 
 ---
 
-## Модуль `api/controllers/auth/`
+## Изменения в окружении
 
-### Структура
+### `public/environment.json`
 
-```
-api/controllers/auth/
-  dtos/
-    login-request-dto.interface.ts
-    login-response-dto.interface.ts
-    refresh-token-request-dto.interface.ts
-    refresh-token-response-dto.interface.ts
-  interfaces/
-    token.interface.ts
-  services/
-    auth-api/auth-api.service.ts
-    auth/auth.service.ts
-  index.ts
-  README.md
-```
-
-### DTOs
-
-```ts
-// login-request-dto.interface.ts
-interface ILoginRequestDto {
-  login: string;
-  password: string;
-}
-
-// login-response-dto.interface.ts
-interface ILoginResponseDto {
-  token: string;
-  refreshToken: string;
-}
-
-// refresh-token-request-dto.interface.ts
-interface IRefreshTokenRequestDto {
-  refreshToken: string;
-}
-
-// refresh-token-response-dto.interface.ts — совпадает с ILoginResponseDto
-interface IRefreshTokenResponseDto {
-  token: string;
-  refreshToken: string;
+```json
+{
+  "apiUrl": "https://zidium3-backend.zidium.net",
+  "authUrl": "https://zidium3-backend.zidium.net",
+  "title": "Indigo Soft"
 }
 ```
 
-### Доменная модель
+### `core/app-environment/interfaces/app-environment.interface.ts`
 
 ```ts
-// interfaces/token.interface.ts
-interface IToken {
-  accessToken: string;
-  refreshToken: string;
+interface IAppEnvironment {
+  apiUrl: string;
+  authUrl: string;
+  title: string;
 }
 ```
-
-### Сервисы
-
-**`AuthApiService`** — сырые HTTP-вызовы через `ApiService`:
-
-```ts
-login(login: string, password: string): Observable<ILoginResponseDto>
-refreshToken(refreshToken: string): Observable<IRefreshTokenResponseDto>
-```
-
-**`AuthService`** — публичный API с маппингом DTO → `IToken`:
-
-```ts
-login(login: string, password: string): Observable<IToken>
-refreshToken(refreshToken: string): Observable<IToken>
-```
-
-### Barrel
-
-```ts
-// index.ts
-export type { IToken } from './interfaces/token.interface';
-export { AuthService } from './services/auth/auth.service';
-```
-
-Path alias: `@api/auth` → `src/app/api/controllers/auth/index.ts`
 
 ---
 
 ## Модуль `src/app/auth/`
+
+Полностью самодостаточный слой. Никаких импортов из `app/api/` или `app/core/`.
 
 ### Структура
 
@@ -108,9 +46,12 @@ src/app/auth/
   interfaces/
     auth-config.interface.ts
     token.interface.ts
+    auth-user.interface.ts
+    login-response.interface.ts
   models/
     token.ts
   services/
+    auth-http/auth-http.service.ts
     token-storage/token-storage.service.ts
   guards/
     auth.guard.ts
@@ -124,9 +65,10 @@ src/app/auth/
 ```ts
 // interfaces/auth-config.interface.ts
 interface IAuthConfig {
+  authUrl: string;
   redirects: {
-    onUnauthenticated: string;  // роут для неавторизованных (напр. '/login')
-    onAuthenticated: string;    // роут для уже авторизованных (напр. '/categories')
+    onUnauthenticated: string;  // напр. '/login'
+    onAuthenticated: string;    // напр. '/categories'
   };
 }
 
@@ -134,7 +76,7 @@ interface IAuthConfig {
 const AUTH_CONFIG = new InjectionToken<IAuthConfig>('AUTH_CONFIG');
 ```
 
-### Token модель
+### Интерфейсы
 
 ```ts
 // interfaces/token.interface.ts
@@ -143,6 +85,22 @@ interface IToken {
   refreshToken: string;
 }
 
+// interfaces/auth-user.interface.ts
+interface IAuthUser {
+  displayName: string;
+  timezoneOffset: string;
+}
+
+// interfaces/login-response.interface.ts
+interface ILoginResponse {
+  user: IAuthUser;
+  token: IToken;
+}
+```
+
+### Token модель
+
+```ts
 // models/token.ts
 class Token implements IToken {
   constructor(
@@ -151,6 +109,24 @@ class Token implements IToken {
   ) {}
 }
 ```
+
+### AuthHttpService
+
+`providedIn: 'root'`. Делает HTTP-запросы напрямую через `inject(HttpClient)`. URL берёт из `inject(AUTH_CONFIG).authUrl`. Никаких зависимостей от `app/api/`.
+
+Эндпоинты (по Swagger `POST /front/logon`, `POST /front/logon/refresh-token`):
+
+```ts
+// Запрос логина: { login: string, password: string }
+// Ответ: { user: { displayName, timezoneOffset }, token: string, refreshToken: string }
+login(login: string, password: string): Observable<ILoginResponse>
+
+// Запрос refresh: { refreshToken: string }
+// Ответ: аналогичен login
+refreshToken(refreshToken: string): Observable<ILoginResponse>
+```
+
+Маппинг в сервисе: серверный `token` (string) → `IToken.accessToken`.
 
 ### TokenStorageService
 
@@ -171,9 +147,9 @@ clearToken(): void
 - Есть токен → `true`
 - Нет токена → `router.createUrlTree([config.redirects.onUnauthenticated])`
 
-### publicGuard (опционально)
+### publicGuard
 
-Для страниц, доступных только неавторизованным (напр. `/login`).
+Для страниц только для неавторизованных (напр. `/login`).
 
 - Нет токена → `true`
 - Есть токен → `router.createUrlTree([config.redirects.onAuthenticated])`
@@ -182,23 +158,21 @@ clearToken(): void
 
 Функциональный `HttpInterceptorFn`.
 
-**Нормальный путь:**
+**Исключения** — запросы на `authUrl` (login и refresh) пропускаются без заголовка и без обработки 401.
 
+**Нормальный путь:**
 1. Взять `accessToken` из `TokenStorageService`
-2. Если токен есть — клонировать запрос с заголовком `Authorization: Bearer <accessToken>`
-3. Запросы на `/logon` и `/logon/refresh-token` — пропустить без заголовка и без обработки 401
+2. Клонировать запрос с `Authorization: Bearer <accessToken>`
 
 **Путь 401:**
+1. Если `isRefreshing === true` → добавить запрос в `refreshQueue`
+2. Иначе:
+   - `isRefreshing = true`
+   - Вызвать `AuthHttpService.refreshToken(currentRefreshToken)`
+   - **Успех**: сохранить новый токен, сбросить флаг, повторить все запросы из очереди + текущий
+   - **Ошибка**: `clearToken()`, сбросить флаг и очередь, `Router.navigate([config.redirects.onUnauthenticated])`, пробросить ошибку
 
-1. Interceptor перехватывает `HttpErrorResponse` со статусом 401
-2. Если `isRefreshing === true` — добавить текущий запрос в `refreshQueue` (массив resolve-функций Promise)
-3. Иначе:
-   - Установить `isRefreshing = true`
-   - Вызвать `AuthApiService.refreshToken(currentRefreshToken)`
-   - **Успех**: сохранить новый токен через `TokenStorageService`, сбросить `isRefreshing`, выполнить все запросы из очереди, повторить текущий запрос
-   - **Ошибка**: очистить токен, сбросить `isRefreshing`, сбросить очередь, редирект на `config.redirects.onUnauthenticated`, пробросить ошибку
-
-`isRefreshing` и `refreshQueue` — модульные переменные внутри файла interceptor (не сервис, т.к. interceptor один на весь DI).
+`isRefreshing` и `refreshQueue` — модульные переменные внутри файла interceptor.
 
 ### provideAuth()
 
@@ -210,19 +184,7 @@ function provideAuth(config: IAuthConfig): EnvironmentProviders {
 }
 ```
 
-Interceptor регистрируется через `provideHttpClient(withInterceptors([authInterceptor]))` в `app.config-resolver.ts`. `provideAuth()` не трогает `HttpClient` — он уже зарегистрирован.
-
-**Использование в `app.config-resolver.ts`:**
-
-```ts
-provideHttpClient(withInterceptors([authInterceptor])),
-provideAuth({
-  redirects: {
-    onUnauthenticated: '/login',
-    onAuthenticated: '/categories',
-  },
-}),
-```
+Interceptor регистрируется в `app.config-resolver.ts` через `withInterceptors([authInterceptor])`.
 
 ### Barrel
 
@@ -230,42 +192,55 @@ provideAuth({
 // index.ts
 export { provideAuth } from './config/provide-auth.function';
 export { authGuard } from './guards/auth.guard';
+export { publicGuard } from './guards/public.guard';
 export { authInterceptor } from './interceptors/auth.interceptor';
 export type { IAuthConfig } from './interfaces/auth-config.interface';
 export type { IToken } from './interfaces/token.interface';
+export type { ILoginResponse } from './interfaces/login-response.interface';
+export { TokenStorageService } from './services/token-storage/token-storage.service';
 ```
 
 Path alias: `@auth` → `src/app/auth/`
 
 ---
 
-## Интеграция
-
-### tsconfig
-
-В обоих `tsconfig.app.json` и `tsconfig.spec.json` добавить:
-
-```json
-"@auth": ["src/app/auth/"],
-"@api/auth": ["src/app/api/controllers/auth/index.ts"]
-```
-
-### app.config-resolver.ts
+## Интеграция в app.config-resolver.ts
 
 ```ts
-import { authInterceptor } from '@auth';
-import { provideAuth } from '@auth';
+import { authInterceptor, provideAuth } from '@auth';
+import { AppEnvironment } from '@core/app-env';
 
-provideHttpClient(withInterceptors([authInterceptor])),
-provideAuth({
-  redirects: { onUnauthenticated: '/login', onAuthenticated: '/categories' },
-}),
+export const appConfigResolver = (env: AppEnvironment): ApplicationConfig => ({
+  providers: [
+    provideHttpClient(withInterceptors([authInterceptor])),
+    provideAuth({
+      authUrl: env.authUrl,
+      redirects: {
+        onUnauthenticated: '/login',
+        onAuthenticated: '/categories',
+      },
+    }),
+    // ...остальные провайдеры
+  ],
+});
+```
+
+---
+
+## tsconfig
+
+В `tsconfig.app.json` и `tsconfig.spec.json`:
+
+```json
+"@auth": ["src/app/auth/"]
 ```
 
 ---
 
 ## Тестирование
 
-- `TokenStorageService`: юнит-тесты с mock localStorage
-- `authGuard`: тест с токеном (→ `true`) и без (→ redirect)
-- `authInterceptor`: тест добавления заголовка; тест 401 → refresh → retry; тест 401 при неудачном refresh → redirect; тест очереди параллельных запросов
+- `TokenStorageService`: юнит-тесты с mock `localStorage`
+- `authGuard`: с токеном → `true`; без токена → redirect на `onUnauthenticated`
+- `publicGuard`: без токена → `true`; с токеном → redirect на `onAuthenticated`
+- `authInterceptor`: добавление заголовка; 401 → refresh → retry; 401 + неудачный refresh → redirect; очередь параллельных 401
+- `AuthHttpService`: маппинг серверного `token` → `accessToken`
