@@ -6,7 +6,7 @@ import type { Observable } from 'rxjs';
 import { throwError } from 'rxjs';
 import { catchError, finalize, shareReplay, switchMap } from 'rxjs/operators';
 import { AUTH_CONFIG } from '../config/auth-config.token';
-import { AuthStateService } from '../services/auth/auth-state.service';
+import { AuthService } from '../services/auth/auth-state.service';
 
 /**
  * null  — refresh не выполняется.
@@ -27,7 +27,7 @@ let refreshInProgress$: Observable<unknown> | null = null;
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const config = inject(AUTH_CONFIG);
-  const authState = inject(AuthStateService);
+  const authState = inject(AuthService);
   const router = inject(Router);
 
   // Запросы к endpoints авторизации (login, refresh) не должны содержать

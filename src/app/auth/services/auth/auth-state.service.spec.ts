@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
-import { AuthStateService } from './auth-state.service';
+import { AuthService } from './auth-state.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 import { AUTH_CONFIG } from '../../config/auth-config.token';
 import { Token } from '../../models/token';
@@ -11,7 +11,6 @@ const CONFIG = {
   authUrl: 'https://auth.example.com',
   redirects: { onUnauthenticated: '/login', onAuthenticated: '/categories' },
 };
-
 
 const REFRESH_RESPONSE = {
   user: { displayName: 'test', timezoneOffset: '03:00:00' },
@@ -26,7 +25,7 @@ const LOGIN_RESPONSE = {
 };
 
 describe('AuthStateService', () => {
-  let service: AuthStateService;
+  let service: AuthService;
   let tokenStorage: TokenStorageService;
   let httpMock: HttpTestingController;
 
@@ -39,7 +38,7 @@ describe('AuthStateService', () => {
         { provide: AUTH_CONFIG, useValue: CONFIG },
       ],
     });
-    service = TestBed.inject(AuthStateService);
+    service = TestBed.inject(AuthService);
     tokenStorage = TestBed.inject(TokenStorageService);
     httpMock = TestBed.inject(HttpTestingController);
   });
@@ -55,7 +54,7 @@ describe('AuthStateService', () => {
       localStorage.setItem('auth_access_token', 'pre-acc');
       localStorage.setItem('auth_refresh_token', 'pre-ref');
       // Re-create service to trigger constructor read
-      const freshService = TestBed.runInInjectionContext(() => new AuthStateService());
+      const freshService = TestBed.runInInjectionContext(() => new AuthService());
       expect(freshService.token()?.accessToken).toBe('pre-acc');
     });
   });
@@ -114,13 +113,11 @@ describe('AuthStateService', () => {
   describe('refreshToken()', () => {
     it('calls refresh endpoint and updates signal and localStorage', async () => {
       tokenStorage.setToken({ accessToken: 'old-access', refreshToken: 'old-refresh' });
-      const freshService = TestBed.runInInjectionContext(() => new AuthStateService());
+      const freshService = TestBed.runInInjectionContext(() => new AuthService());
 
       const result = firstValueFrom(freshService.refreshToken());
 
-      httpMock
-        .expectOne(`${CONFIG.authUrl}/front/logon/refresh-token`)
-        .flush(REFRESH_RESPONSE);
+      httpMock.expectOne(`${CONFIG.authUrl}/front/logon/refresh-token`).flush(REFRESH_RESPONSE);
 
       await result;
 

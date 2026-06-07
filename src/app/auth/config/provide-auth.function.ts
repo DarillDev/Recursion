@@ -3,14 +3,14 @@ import { inject, makeEnvironmentProviders, provideAppInitializer } from '@angula
 import { firstValueFrom, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AUTH_CONFIG } from './auth-config.token';
-import { AuthStateService } from '../services/auth/auth-state.service';
+import { AuthService } from '../services/auth/auth-state.service';
 import type { IAuthConfig } from '../interfaces/auth-config.interface';
 
 export const provideAuth = (config: IAuthConfig): EnvironmentProviders =>
   makeEnvironmentProviders([
     { provide: AUTH_CONFIG, useValue: config },
     provideAppInitializer(() => {
-      const authState = inject(AuthStateService);
+      const authState = inject(AuthService);
       const token = authState.token();
 
       if (token?.isExpired) {

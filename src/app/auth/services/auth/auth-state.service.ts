@@ -9,7 +9,7 @@ import { TokenStorageService } from '../token-storage/token-storage.service';
 import { AuthApiService } from '../auth-api/auth-api.service';
 
 @Injectable({ providedIn: 'root' })
-export class AuthStateService {
+export class AuthService {
   private readonly tokenStorage = inject(TokenStorageService);
   private readonly authApi = inject(AuthApiService);
 
