@@ -6,7 +6,7 @@ import type { Observable } from 'rxjs';
 import { throwError } from 'rxjs';
 import { catchError, finalize, shareReplay, switchMap } from 'rxjs/operators';
 import { AUTH_CONFIG } from '../config/auth-config.token';
-import { AuthStateService } from '../services/auth-state/auth-state.service';
+import { AuthStateService } from '../services/auth/auth-state.service';
 
 /**
  * null  — refresh не выполняется.

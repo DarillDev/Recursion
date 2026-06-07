@@ -5,7 +5,7 @@ export { authInterceptor } from './interceptors/auth.interceptor';
 
 export { TokenStorageService } from './services/token-storage/token-storage.service';
 export { AuthApiService } from './services/auth-api/auth-api.service';
-export { AuthStateService } from './services/auth-state/auth-state.service';
+export { AuthStateService } from './services/auth/auth-state.service';
 
 export type { IAuthConfig } from './interfaces/auth-config.interface';
 export type { IToken } from './interfaces/token.interface';

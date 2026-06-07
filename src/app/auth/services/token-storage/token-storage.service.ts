@@ -15,7 +15,7 @@ export class TokenStorageService {
       return null;
     }
 
-    return new Token(accessToken, refreshToken);
+    return new Token({ accessToken, refreshToken });
   }
 
   public setToken(token: IToken): void {

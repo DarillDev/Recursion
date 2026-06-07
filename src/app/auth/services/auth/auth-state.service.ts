@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { throwError } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import type { IToken } from '../../interfaces/token.interface';
 import type { ILoginResponse } from '../../interfaces/login-response.interface';
 import { Token } from '../../models/token';
 import { TokenStorageService } from '../token-storage/token-storage.service';
@@ -21,11 +22,7 @@ export class AuthStateService {
   /** Выполняет вход, сохраняет токен в памяти и localStorage. */
   public login(username: string, password: string): Observable<void> {
     return this.authApi.login(username, password).pipe(
-      tap((response) => {
-        const newToken = new Token(response.token.accessToken, response.token.refreshToken);
-        this.tokenStorage.setToken(newToken);
-        this._token.set(newToken);
-      }),
+      tap((response) => this.saveToken(response.token)),
       map(() => undefined),
     );
   }
@@ -47,12 +44,14 @@ export class AuthStateService {
       return throwError(() => new Error('No refresh token'));
     }
 
-    return this.authApi.refreshToken(currentToken.refreshToken).pipe(
-      tap((response) => {
-        const newToken = new Token(response.token.accessToken, response.token.refreshToken);
-        this.tokenStorage.setToken(newToken);
-        this._token.set(newToken);
-      }),
-    );
+    return this.authApi
+      .refreshToken(currentToken.refreshToken)
+      .pipe(tap((response) => this.saveToken(response.token)));
+  }
+
+  private saveToken(raw: IToken): void {
+    const token = new Token(raw);
+    this.tokenStorage.setToken(token);
+    this._token.set(token);
   }
 }
