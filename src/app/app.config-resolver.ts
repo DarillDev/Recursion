@@ -17,7 +17,7 @@ export const appConfigResolver = (appEnvironment: AppEnvironment): ApplicationCo
     authUrl: appEnvironment.apiUrl,
     redirects: {
       onUnauthenticated: '/login',
-      onAuthenticated: '/internal/categories',
+      onAuthenticated: '/categories',
     },
   };
 

@@ -8,9 +8,8 @@ export const routes: Routes = [
     loadChildren: () => import('src/layouts/public').then((module) => module.PUBLIC_LAYOUT_ROUTES),
   },
   {
-    path: 'internal',
+    path: '',
     canActivate: [authGuard],
-    loadChildren: () =>
-      import('src/layouts/internal').then((module) => module.INTERNAL_LAYOUT_ROUTES),
+    loadChildren: () => import('@layouts/internal').then((module) => module.INTERNAL_LAYOUT_ROUTES),
   },
 ];
