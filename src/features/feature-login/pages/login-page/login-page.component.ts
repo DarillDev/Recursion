@@ -1,10 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from 'src/shared/auth';
+import { InputFieldComponent } from '@shared/ui-kit/input/components/input-field';
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, InputFieldComponent],
   templateUrl: './login-page.component.html',
   styleUrl: './login-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -12,27 +19,34 @@ import { AuthService } from 'src/shared/auth';
 export class LoginPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   public readonly form = this.fb.nonNullable.group({
     email: ['test', [Validators.required]],
     password: ['77777', [Validators.required, Validators.minLength(5)]],
   });
 
+  public readonly loginError = signal<string | null>(null);
+
+  public setLoginError(message: string): void {
+    this.loginError.set(message);
+  }
+
   public onSubmit(): void {
+    this.loginError.set(null);
+
     if (this.form.valid) {
       const { email, password } = this.form.getRawValue();
 
       this.authService.login(email, password).subscribe({
         next: () => {
-          // Handle successful login, e.g., navigate to the dashboard
+          void this.router.navigate(['/']);
         },
-        error: (err) => {
-          // Handle login error, e.g., show an error message
-          console.error('Login failed:', err);
+        error: () => {
+          this.loginError.set('Invalid credentials. Please try again.');
         },
       });
     } else {
-      // Mark all controls as touched to trigger validation messages
       this.form.markAllAsTouched();
     }
   }
