@@ -1,0 +1,28 @@
+<nav class="sidebar__nav">
+  <div class="sidebar__top">
+    <button class="sidebar__item sidebar__toggle" type="button" aria-label="Toggle menu">
+      <ds-icon [name]="EIconName.MenuOpen" [size]="20" />
+    </button>
+  </div>
+
+  <div class="sidebar__links">
+    <a
+      class="sidebar__item"
+      routerLink="/categories"
+      routerLinkActive="sidebar__item--active"
+      aria-label="Categories"
+    >
+      <ds-icon [name]="EIconName.Settings" [size]="20" />
+    </a>
+  </div>
+
+  <div class="sidebar__bottom">
+    <button class="sidebar__item" type="button" aria-label="Account">
+      <ds-icon [name]="EIconName.AccountCircle" [size]="20" />
+    </button>
+
+    <button class="sidebar__item" type="button" aria-label="Logout">
+      <ds-icon [name]="EIconName.Logout" [size]="20" />
+    </button>
+  </div>
+</nav>
