@@ -1,91 +1,74 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  DestroyRef,
-  inject,
-  signal,
-} from '@angular/core';
-import type { OnInit } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, debounceTime, filter, switchMap } from 'rxjs';
-import { CategoriesService } from '@shared/api/categories';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { debounceTime, filter, skip, switchMap } from 'rxjs';
 import type { ICategory } from '@shared/api/categories';
 import { ModalService } from '@shared/ui-kit/modal';
 import { ConfirmationService } from '@shared/ui-kit/confirmation';
 import { CategoryFormDialogComponent } from '../../components/category-form-dialog/category-form-dialog.component';
-import type { ICategoryForm } from '../../models/interfaces/category-form.interface';
+import type { ICategoryForm } from '../../interfaces/category-form.interface';
 import { ButtonComponent } from '@shared/ui-kit/button';
+import { IconComponent } from '@shared/ui-kit/icon';
 import { SearchInputComponent } from '@shared/ui-kit/input/components/search-input';
-import { FormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { CategoryListService } from './services/category-list/category-list.service';
 
 @Component({
   selector: 'app-category-list-page',
-  imports: [ButtonComponent, SearchInputComponent, FormsModule],
+  imports: [ButtonComponent, IconComponent, SearchInputComponent, ReactiveFormsModule],
   templateUrl: './category-list-page.component.html',
   styleUrl: './category-list-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [CategoryListService],
 })
-export class CategoryListPageComponent implements OnInit {
-  private readonly categoriesService = inject(CategoriesService);
+export class CategoryListPageComponent {
+  private readonly listService = inject(CategoryListService);
   private readonly modalService = inject(ModalService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly items = signal<ICategory[]>([]);
-  protected readonly isLoading = signal(false);
-  protected readonly hasMore = signal(true);
-  protected readonly sortDesc = signal(false);
-  protected readonly searchValue = signal('');
+  protected readonly searchControl = new FormControl('', { nonNullable: true });
 
-  protected readonly canAdd = computed(() => {
-    const list = this.items();
-    return list.length === 0 || list.some((i) => i.canEdit);
-  });
+  protected readonly searchQuery$ = toSignal(
+    this.searchControl.valueChanges.pipe(debounceTime(300)),
+    { initialValue: '' },
+  );
+  protected readonly items = this.listService.items;
+  protected readonly isLoading = this.listService.isLoading;
+  protected readonly hasMore = this.listService.hasMore;
+  protected readonly sortDesc = this.listService.sortDesc;
+  protected readonly canEdit = this.listService.canEdit;
 
-  private readonly searchSubject = new Subject<string>();
-  private pageNumber = 0;
-  private readonly PAGE_SIZE = 20;
-
-  public ngOnInit(): void {
-    this.searchSubject
-      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
-      .subscribe((query) => {
-        this.searchValue.set(query);
-        this.loadPage(true);
-      });
-
-    this.loadPage(true);
+  constructor() {
+    toObservable(this.searchQuery$).pipe(
+      skip(1),
+      takeUntilDestroyed(),
+    ).subscribe((search) => this.listService.updateParams({ search }));
   }
 
-  protected onSearchChange(value: string): void {
-    this.searchSubject.next(value);
+  protected onSearchChange(search: string): void {
+    this.listService.updateParams({ search });
   }
 
   protected onSortToggle(): void {
-    this.sortDesc.update((v) => !v);
-    this.loadPage(true);
+    this.listService.updateParams({ sortDesc: !this.sortDesc() });
   }
 
   protected onScroll(event: Event): void {
     const el = event.target as HTMLElement;
     const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 100;
-    if (nearBottom && this.hasMore() && !this.isLoading()) {
-      this.loadPage(false);
+    if (nearBottom) {
+      this.listService.loadMore();
     }
   }
 
   protected onAdd(): void {
     this.modalService
-      .open<ICategoryForm>(CategoryFormDialogComponent)
+      .open<ICategoryForm, null>(CategoryFormDialogComponent, null)
       .pipe(
         filter(Boolean),
-        switchMap((form) => this.categoriesService.create(form)),
-        takeUntilDestroyed(this.destroyRef),
+        switchMap((form) => this.listService.add(form)),
+        takeUntilDestroyed(),
       )
-      .subscribe((created) => {
-        this.items.update((list) => [created, ...list]);
-      });
+      .subscribe();
   }
 
   protected onEdit(category: ICategory): void {
@@ -93,56 +76,20 @@ export class CategoryListPageComponent implements OnInit {
       .open<ICategoryForm, ICategory>(CategoryFormDialogComponent, category)
       .pipe(
         filter(Boolean),
-        switchMap((form) => this.categoriesService.update(category.id, form)),
-        takeUntilDestroyed(this.destroyRef),
+        switchMap((form) => this.listService.update(category.id, form)),
+        takeUntilDestroyed(),
       )
-      .subscribe((updated) => {
-        this.items.update((list) => list.map((i) => (i.id === updated.id ? updated : i)));
-      });
+      .subscribe();
   }
 
   protected onDelete(category: ICategory): void {
     this.confirmationService
-      .confirm('Удалить категорию', `Удалить "${category.name}"? Это действие необратимо.`)
+      .confirm({ description: 'Sure to delete this element?' })
       .pipe(
         filter(Boolean),
-        switchMap(() => this.categoriesService.delete(category.id)),
-        takeUntilDestroyed(this.destroyRef),
+        switchMap(() => this.listService.delete(category.id)),
+        takeUntilDestroyed(),
       )
-      .subscribe(() => {
-        this.items.update((list) => list.filter((i) => i.id !== category.id));
-      });
-  }
-
-  private loadPage(reset: boolean): void {
-    if (reset) {
-      this.pageNumber = 0;
-      this.items.set([]);
-      this.hasMore.set(true);
-    }
-
-    this.isLoading.set(true);
-
-    this.categoriesService
-      .getList({
-        pageNumber: this.pageNumber,
-        pageSize: this.PAGE_SIZE + 1,
-        search: this.searchValue(),
-        sortDesc: this.sortDesc(),
-      })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (result) => {
-          const hasMore = result.length > this.PAGE_SIZE;
-          const page = hasMore ? result.slice(0, this.PAGE_SIZE) : result;
-          this.hasMore.set(hasMore);
-          this.items.update((list) => [...list, ...page]);
-          this.pageNumber++;
-          this.isLoading.set(false);
-        },
-        error: () => {
-          this.isLoading.set(false);
-        },
-      });
+      .subscribe();
   }
 }
