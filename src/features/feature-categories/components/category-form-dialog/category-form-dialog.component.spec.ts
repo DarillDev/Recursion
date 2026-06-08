@@ -9,7 +9,7 @@ import { CategoryFormDialogComponent } from './category-form-dialog.component';
 const dialogRefSpy = { close: vi.fn() };
 const categoriesServiceStub = { checkNameExists: vi.fn().mockReturnValue(of(false)) };
 
-function createComponent(data: ICategory | null) {
+function createComponent(data: ICategory | null): ReturnType<typeof TestBed.createComponent<CategoryFormDialogComponent>> {
   TestBed.configureTestingModule({
     imports: [CategoryFormDialogComponent],
     providers: [

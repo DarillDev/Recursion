@@ -20,7 +20,7 @@ describe('CategoryListPageComponent', () => {
   const confirmationServiceStub = { confirm: vi.fn() };
   const modalServiceStub = { open: vi.fn() };
 
-  function createComponent() {
+  function createComponent(): ReturnType<typeof TestBed.createComponent<CategoryListPageComponent>> {
     TestBed.configureTestingModule({
       imports: [CategoryListPageComponent],
       providers: [

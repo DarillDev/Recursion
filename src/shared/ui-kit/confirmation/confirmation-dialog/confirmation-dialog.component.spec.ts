@@ -6,7 +6,7 @@ import { ConfirmationDialogComponent } from './confirmation-dialog.component';
 describe('ConfirmationDialogComponent', () => {
   const dialogRefSpy = { close: vi.fn() };
 
-  function createComponent(title: string, description: string) {
+  function createComponent(title: string, description: string): ReturnType<typeof TestBed.createComponent<ConfirmationDialogComponent>> {
     TestBed.configureTestingModule({
       imports: [ConfirmationDialogComponent],
       providers: [

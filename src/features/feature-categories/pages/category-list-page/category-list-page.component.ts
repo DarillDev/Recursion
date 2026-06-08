@@ -4,9 +4,9 @@ import {
   computed,
   DestroyRef,
   inject,
-  OnInit,
   signal,
 } from '@angular/core';
+import type { OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, filter, switchMap } from 'rxjs';
 import { CategoriesService } from '@shared/api/categories';
@@ -131,13 +131,18 @@ export class CategoryListPageComponent implements OnInit {
         sortDesc: this.sortDesc(),
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((result) => {
-        const hasMore = result.length > this.PAGE_SIZE;
-        const page = hasMore ? result.slice(0, this.PAGE_SIZE) : result;
-        this.hasMore.set(hasMore);
-        this.items.update((list) => [...list, ...page]);
-        this.pageNumber++;
-        this.isLoading.set(false);
+      .subscribe({
+        next: (result) => {
+          const hasMore = result.length > this.PAGE_SIZE;
+          const page = hasMore ? result.slice(0, this.PAGE_SIZE) : result;
+          this.hasMore.set(hasMore);
+          this.items.update((list) => [...list, ...page]);
+          this.pageNumber++;
+          this.isLoading.set(false);
+        },
+        error: () => {
+          this.isLoading.set(false);
+        },
       });
   }
 }
