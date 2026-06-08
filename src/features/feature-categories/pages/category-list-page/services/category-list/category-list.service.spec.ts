@@ -5,6 +5,8 @@ import { CategoriesApiService } from '@shared/api/categories';
 import type { ICategory, ICategoriesListResult } from '@shared/api/categories';
 import { CategoryListService } from './category-list.service';
 
+const PAGE_SIZE = 20;
+
 const cat = (id: number, name = `Cat${id}`): ICategory => ({ id, name });
 const listResult = (items: ICategory[], canEdit = true): ICategoriesListResult => ({
   items,
@@ -39,7 +41,7 @@ describe('CategoryListService', () => {
       search: '',
       sortDesc: false,
       pageNumber: 0,
-      pageSize: 21,
+      pageSize: PAGE_SIZE + 1,
     });
   });
 
@@ -66,7 +68,7 @@ describe('CategoryListService', () => {
   });
 
   it('hasMore = true и список обрезается до PAGE_SIZE когда сервер вернул PAGE_SIZE+1', () => {
-    const items = Array.from({ length: 21 }, (_, i) => cat(i));
+    const items = Array.from({ length: PAGE_SIZE + 1 }, (_, i) => cat(i));
     api.getList.mockReturnValue(of(listResult(items)));
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
@@ -75,13 +77,13 @@ describe('CategoryListService', () => {
     service = TestBed.inject(CategoryListService);
     TestBed.flushEffects();
     expect(service.hasMore()).toBe(true);
-    expect(service.items().length).toBe(20);
+    expect(service.items().length).toBe(PAGE_SIZE);
   });
 
   // --- Пагинация ---
 
   it('loadMore() дозапрашивает страницу 1 и добавляет элементы', () => {
-    const page0 = Array.from({ length: 21 }, (_, i) => cat(i));
+    const page0 = Array.from({ length: PAGE_SIZE + 1 }, (_, i) => cat(i));
     const page1 = [cat(100), cat(101)];
     api.getList
       .mockReturnValueOnce(of(listResult(page0)))
@@ -96,8 +98,8 @@ describe('CategoryListService', () => {
     service.loadMore();
     TestBed.flushEffects();
 
-    expect(service.items().length).toBe(22); // 20 + 2
-    expect(service.items()[20]).toEqual(cat(100));
+    expect(service.items().length).toBe(PAGE_SIZE + 2); // PAGE_SIZE + 2 from page 1
+    expect(service.items()[PAGE_SIZE]).toEqual(cat(100));
   });
 
   it('loadMore() ничего не делает когда hasMore = false', () => {
@@ -152,6 +154,7 @@ describe('CategoryListService', () => {
     const newCat = cat(42, 'New');
     api.create = vi.fn().mockReturnValue(of(newCat));
     service.add({ name: 'New', description: '' }).subscribe();
+    TestBed.flushEffects();
     expect(service.items()[0]).toEqual(newCat);
   });
 
@@ -167,6 +170,7 @@ describe('CategoryListService', () => {
     const updated = cat(1, 'Updated');
     api.update = vi.fn().mockReturnValue(of(updated));
     service.update(1, { name: 'Updated', description: '' }).subscribe();
+    TestBed.flushEffects();
     expect(service.items()[0]).toEqual(updated);
   });
 
@@ -181,6 +185,7 @@ describe('CategoryListService', () => {
 
     api.delete = vi.fn().mockReturnValue(of(void 0));
     service.delete(1).subscribe();
+    TestBed.flushEffects();
     expect(service.items().map((i) => i.id)).not.toContain(1);
   });
 });
