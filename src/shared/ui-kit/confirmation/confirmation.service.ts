@@ -12,13 +12,13 @@ export class ConfirmationService {
   private readonly defaultTitle = 'Confirmation';
   private readonly defaultDescription = 'Confirm this action.';
   private readonly defaultConfirmButtonLabel = 'Confirm';
-  private readonly defaultCancelButtonLabel = 'Delete';
+  private readonly defaultCancelButtonLabel = 'Cancel';
 
   public confirm(options?: Partial<IConfirmationDialogData>): Observable<boolean> {
     const data: IConfirmationDialogData = {
       title: options?.title ?? this.defaultTitle,
       description: options?.description ?? this.defaultDescription,
-      confirmButtonLabel: options?.confirmButtonLabel ?? this.defaultCancelButtonLabel,
+      confirmButtonLabel: options?.confirmButtonLabel ?? this.defaultConfirmButtonLabel,
       cancelButtonLabel: options?.cancelButtonLabel ?? this.defaultCancelButtonLabel,
     };
 

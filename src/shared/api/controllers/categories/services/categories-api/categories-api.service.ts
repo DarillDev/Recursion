@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { ApiService } from 'src/shared/api/core';
+import { ApiService } from '@shared/api/core';
 import type { ICreateCategoryDto } from '../../dtos/create-category-dto.interface';
 import type { IUpdateCategoryDto } from '../../dtos/update-category-dto.interface';
 import type { ICategory } from '../../interfaces/category.interface';
@@ -27,6 +27,7 @@ export class CategoriesApiService {
   }
 
   public update(id: number, body: IUpdateCategoryDto): Observable<ICategory> {
+    // POST по спецификации Swagger — сервер не поддерживает PUT/PATCH для этого endpoint
     return this.apiService.post(`${this.url}/${id}`, body);
   }
 

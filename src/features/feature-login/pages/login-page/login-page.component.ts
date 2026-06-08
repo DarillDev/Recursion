@@ -1,11 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from 'src/shared/auth';
+import { AuthService } from '@shared/auth';
+import { createDestroyer } from '@shared/utils/create-destroyer';
 import { InputFieldComponent } from '@shared/ui-kit/input/components/input-field';
 import { ButtonComponent } from '@shared/ui-kit/button';
 
@@ -19,10 +15,11 @@ import { ButtonComponent } from '@shared/ui-kit/button';
 export class LoginPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly destroy = createDestroyer();
 
-  public readonly form = this.fb.nonNullable.group({
-    email: ['test', [Validators.required]],
-    password: ['77777', [Validators.required, Validators.minLength(5)]],
+  protected readonly form = this.fb.nonNullable.group({
+    email: ['', [Validators.required]],
+    password: ['', [Validators.required, Validators.minLength(5)]],
   });
 
   public readonly loginError = signal<string | null>(null);
@@ -31,17 +28,20 @@ export class LoginPageComponent {
     this.loginError.set(message);
   }
 
-  public onSubmit(): void {
+  protected onSubmit(): void {
     this.loginError.set(null);
 
     if (this.form.valid) {
       const { email, password } = this.form.getRawValue();
 
-      this.authService.login(email, password).subscribe({
-        error: () => {
-          this.loginError.set('Invalid credentials. Please try again.');
-        },
-      });
+      this.authService
+        .login(email, password)
+        .pipe(this.destroy())
+        .subscribe({
+          error: () => {
+            this.loginError.set('Invalid credentials. Please try again.');
+          },
+        });
     } else {
       this.form.markAllAsTouched();
     }

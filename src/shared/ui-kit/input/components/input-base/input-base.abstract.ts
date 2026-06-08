@@ -1,8 +1,7 @@
 import { Directive, input } from '@angular/core';
 import type { ValidationErrors } from '@angular/forms';
-import { AControlValueAccessor } from 'src/shared/models';
-
-import type { TNillable } from 'src/shared/models';
+import { AControlValueAccessor } from '@shared/models';
+import type { TNillable } from '@shared/models';
 
 @Directive()
 export abstract class AInputBaseControl<T> extends AControlValueAccessor<T> {

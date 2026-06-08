@@ -8,6 +8,11 @@ export type TButtonType = 'button' | 'submit' | 'reset';
   templateUrl: './button.component.html',
   styleUrl: './button.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[class.primary]': "variant() === 'primary'",
+    '[class.secondary]': "variant() === 'secondary'",
+    '[class.danger]': "variant() === 'danger'",
+  },
 })
 export class ButtonComponent {
   public readonly variant = input<TButtonVariant>('primary');

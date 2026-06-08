@@ -25,9 +25,18 @@
   // Тени
   --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.18);
 
+  // Hover/active состояния кнопок
+  --color-primary-hover: #004a8c;
+  --color-primary-active: #003a6e;
+  --color-secondary-hover: #e9ecef;
+  --color-secondary-active: #dee2e6;
+  --color-danger-hover: #b02a37;
+  --color-danger-active: #8c1e28;
+
   // Типографика
   --font-family: 'Roboto', sans-serif;
   --font-size-sm: 14px;
+  --font-size-base: 16px;
   --font-size-md: 18px;
   --font-size-lg: 24px;
   --font-weight-regular: 400;

@@ -2,8 +2,6 @@ import type { OnInit, TrackByFunction } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
-  inject,
   input,
   output,
   viewChild,
@@ -16,8 +14,8 @@ import {
 import { IconComponent } from '@shared/ui-kit/icon';
 import type { ICategory } from '@shared/api/categories';
 import { throttleTime } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import type { TSort } from '../../models/types/sort.type';
+import type { ISort } from '../../models/interfaces/sort.interface';
+import { createDestroyer } from '@shared/utils/create-destroyer';
 
 @Component({
   selector: 'app-category-table',
@@ -27,13 +25,13 @@ import type { TSort } from '../../models/types/sort.type';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CategoryTableComponent implements OnInit {
-  private readonly destroyerRef = inject(DestroyRef);
+  private readonly destroy = createDestroyer();
 
   protected readonly trackById: TrackByFunction<ICategory> = (_, { id }) => id;
 
   public readonly items = input.required<ICategory[]>();
   public readonly isLoading = input.required<boolean>();
-  public readonly sort = input.required<TSort | undefined>();
+  public readonly sort = input.required<ISort | undefined>();
   public readonly canEdit = input.required<boolean>();
   public readonly hasMore = input.required<boolean>();
   public readonly itemSize = input(50);
@@ -44,18 +42,20 @@ export class CategoryTableComponent implements OnInit {
   public readonly delete = output<ICategory>();
   public readonly loadMore = output<void>();
 
-  private readonly viewport = viewChild(CdkVirtualScrollViewport);
+  private readonly viewport = viewChild.required(CdkVirtualScrollViewport);
+
+  protected onRowActivate(item: ICategory): void {
+    if (this.canEdit()) {
+      this.edit.emit(item);
+    }
+  }
 
   public ngOnInit(): void {
     const viewport = this.viewport();
 
-    if (!viewport) {
-      return;
-    }
-
     const scrollEvent = viewport.scrolledIndexChange.pipe(throttleTime(50));
 
-    scrollEvent.pipe(takeUntilDestroyed(this.destroyerRef)).subscribe((firstVisible) => {
+    scrollEvent.pipe(this.destroy()).subscribe((firstVisible) => {
       if (!this.hasMore() || this.isLoading()) {
         return;
       }

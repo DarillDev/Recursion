@@ -1,1 +1,1 @@
-export { FEATURE_NOT_FOUND_ROUTES } from './feature-not-found.routes';
+export { NotFoundComponent } from './pages/not-found/not-found.component';

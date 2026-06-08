@@ -1,78 +1,76 @@
-<div class="category-table">
-  <div class="category-table__head">
-    <div
-      class="category-table__col-name category-table__sortable"
-      data-testid="sort-id"
-      role="button"
-      tabindex="0"
-      (click)="sortToggle.emit('id')"
-      (keydown.enter)="sortToggle.emit('id')"
-      (keydown.space)="sortToggle.emit('id')"
-    >
-      ID
-      @if (sort()?.field === 'id') {
-        <span class="category-table__sort-icon">{{ sort()?.dir === 'asc' ? '↑' : '↓' }}</span>
-      }
-    </div>
-
-    <div
-      class="category-table__col-desc category-table__sortable"
-      data-testid="sort-name"
-      role="button"
-      tabindex="0"
-      (click)="sortToggle.emit('name')"
-      (keydown.enter)="sortToggle.emit('name')"
-      (keydown.space)="sortToggle.emit('name')"
-    >
-      Name
-      @if (sort()?.field === 'name') {
-        <span class="category-table__sort-icon">{{ sort()?.dir === 'asc' ? '↑' : '↓' }}</span>
-      }
-    </div>
-    <div class="category-table__col-actions"></div>
+<div class="head">
+  <div
+    class="sortable"
+    data-testid="sort-id"
+    role="button"
+    tabindex="0"
+    (click)="sortToggle.emit('id')"
+    (keydown.enter)="sortToggle.emit('id')"
+    (keydown.space)="sortToggle.emit('id')"
+  >
+    ID
+    @if (sort()?.field === 'id') {
+      <span class="sort-icon">{{ sort()?.dir === 'asc' ? '↑' : '↓' }}</span>
+    }
   </div>
 
-  <cdk-virtual-scroll-viewport class="category-table__viewport" [itemSize]="itemSize()">
-    <div
-      class="category-table__row"
-      *cdkVirtualFor="let item of items(); trackById"
-      tabindex="0"
-      (keydown.enter)="canEdit() && edit.emit(item)"
-      (keydown.space)="canEdit() && edit.emit(item)"
-    >
-      <div class="category-table__col-name">{{ item.id }}</div>
-      <div class="category-table__col-desc">{{ item.name }}</div>
-      <div class="category-table__col-actions">
-        @if (canEdit()) {
-          <button
-            class="category-table__icon-btn category-table__icon-btn--edit"
-            [attr.data-testid]="'edit-' + item.id"
-            title="Edit"
-            (click)="edit.emit(item)"
-          >
-            <ui-kit-icon name="edit" [size]="16" />
-          </button>
-
-          <button
-            class="category-table__icon-btn category-table__icon-btn--delete"
-            [attr.data-testid]="'delete-' + item.id"
-            title="Удалить"
-            (click)="delete.emit(item)"
-          >
-            <ui-kit-icon name="delete" [size]="16" />
-          </button>
-        }
-      </div>
-    </div>
-  </cdk-virtual-scroll-viewport>
-
-  @if (isLoading()) {
-    <div class="category-table__loading" data-testid="loading">
-      <span class="category-table__spinner"></span>
-    </div>
-  }
-
-  @if (!isLoading() && items().length === 0) {
-    <div class="category-table__empty" data-testid="empty">Записей не найдено</div>
-  }
+  <div
+    class="sortable"
+    data-testid="sort-name"
+    role="button"
+    tabindex="0"
+    (click)="sortToggle.emit('name')"
+    (keydown.enter)="sortToggle.emit('name')"
+    (keydown.space)="sortToggle.emit('name')"
+  >
+    Name
+    @if (sort()?.field === 'name') {
+      <span class="sort-icon">{{ sort()?.dir === 'asc' ? '↑' : '↓' }}</span>
+    }
+  </div>
+  <div class="col-actions"></div>
 </div>
+
+<cdk-virtual-scroll-viewport class="viewport" [itemSize]="itemSize()">
+  <div
+    class="row"
+    *cdkVirtualFor="let item of items(); trackById"
+    tabindex="0"
+    (keydown.enter)="onRowActivate(item)"
+    (keydown.space)="onRowActivate(item)"
+  >
+    <div>{{ item.id }}</div>
+    <div>{{ item.name }}</div>
+    <div class="col-actions">
+      @if (canEdit()) {
+        <button
+          class="icon-btn"
+          [attr.data-testid]="'edit-' + item.id"
+          title="Edit"
+          (click)="edit.emit(item)"
+        >
+          <ui-kit-icon name="edit" [size]="16" />
+        </button>
+
+        <button
+          class="icon-btn icon-btn--delete"
+          [attr.data-testid]="'delete-' + item.id"
+          title="Delete"
+          (click)="delete.emit(item)"
+        >
+          <ui-kit-icon name="delete" [size]="16" />
+        </button>
+      }
+    </div>
+  </div>
+</cdk-virtual-scroll-viewport>
+
+@if (isLoading()) {
+  <div class="loading" data-testid="loading">
+    <span class="spinner"></span>
+  </div>
+}
+
+@if (!isLoading() && items().length === 0) {
+  <div class="empty" data-testid="empty">No records found</div>
+}

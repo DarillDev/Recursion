@@ -5,10 +5,10 @@ export const DEFAULT_ERRORS: TErrorsTextMap = new Map<
   string,
   string | ((error: ValidationErrors) => string)
 >([
-  ['required', 'Поле обязательно для заполнения'],
-  ['email', 'Некорректный email'],
-  ['minlength', (error) => `Минимум ${error['minlength'].requiredLength} символов`],
-  ['maxlength', (error) => `Максимум ${error['maxlength'].requiredLength} символов`],
-  ['min', (error) => `Минимальное значение: ${error['min'].min}`],
-  ['max', (error) => `Максимальное значение: ${error['max'].max}`],
+  ['required', 'This field is required'],
+  ['email', 'Invalid email address'],
+  ['minlength', (error) => `Minimum ${error['minlength'].requiredLength} characters`],
+  ['maxlength', (error) => `Maximum ${error['maxlength'].requiredLength} characters`],
+  ['min', (error) => `Minimum value: ${error['min'].min}`],
+  ['max', (error) => `Maximum value: ${error['max'].max}`],
 ]);

@@ -1,6 +1,5 @@
 import type { OnInit } from '@angular/core';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { debounceTime, distinctUntilChanged, filter, switchMap, take } from 'rxjs';
 import type { ICategory } from '@shared/api/categories';
 import { ModalService } from '@shared/ui-kit/modal';
@@ -12,6 +11,7 @@ import { SearchInputComponent } from '@shared/ui-kit/input/components/search-inp
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CategoryListService } from './services/category-list/category-list.service';
 import { CategoryTableComponent } from '../../components/category-table';
+import { createDestroyer } from '@shared/utils/create-destroyer';
 
 @Component({
   selector: 'app-category-list-page',
@@ -25,7 +25,7 @@ export class CategoryListPageComponent implements OnInit {
   private readonly listService = inject(CategoryListService);
   private readonly modalService = inject(ModalService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly destroy = createDestroyer();
 
   protected readonly searchControl = new FormControl('', { nonNullable: true });
 
@@ -37,12 +37,8 @@ export class CategoryListPageComponent implements OnInit {
 
   public ngOnInit(): void {
     this.searchControl.valueChanges
-      .pipe(debounceTime(200), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .pipe(debounceTime(200), distinctUntilChanged(), this.destroy())
       .subscribe((search) => this.listService.updateParams({ search }));
-  }
-
-  protected onSearchChange(search: string): void {
-    this.listService.updateParams({ search });
   }
 
   protected onSortToggle(field: 'id' | 'name'): void {
@@ -60,7 +56,7 @@ export class CategoryListPageComponent implements OnInit {
         filter(Boolean),
         take(1),
         switchMap((form) => this.listService.add(form)),
-        takeUntilDestroyed(this.destroyRef),
+        this.destroy(),
       )
       .subscribe();
   }
@@ -72,19 +68,19 @@ export class CategoryListPageComponent implements OnInit {
         filter(Boolean),
         take(1),
         switchMap((form) => this.listService.update({ ...category, ...form })),
-        takeUntilDestroyed(this.destroyRef),
+        this.destroy(),
       )
       .subscribe();
   }
 
   protected onDelete(category: ICategory): void {
     this.confirmationService
-      .confirm({ description: 'Sure to delete this element?', confirmButtonLabel: 'Delete' })
+      .confirm({ description: 'Are you sure you want to delete this item?', confirmButtonLabel: 'Delete' })
       .pipe(
         filter(Boolean),
         take(1),
         switchMap(() => this.listService.delete(category.id)),
-        takeUntilDestroyed(this.destroyRef),
+        this.destroy(),
       )
       .subscribe();
   }

@@ -18,20 +18,22 @@ import {
   type ICategoriesListResult,
   type ICategory,
 } from '@shared/api/categories';
-import { ICategoryForm } from '../../../../interfaces/category-form.interface';
-import type { TSort } from '../../../../models/types/sort.type';
+import type { ICategoryForm } from '../../../../interfaces/category-form.interface';
+import type { ISort } from '../../../../models/interfaces/sort.interface';
+
+interface IListParams {
+  search: string;
+  sort: ISort | undefined;
+  pageNumber: number;
+  pageSize: number;
+}
 
 @Injectable()
 export class CategoryListService {
   private readonly api = inject(CategoriesApiService);
   private readonly PAGE_SIZE = 20;
 
-  private readonly _params = signal<{
-    search: string;
-    sort: TSort | undefined;
-    pageNumber: number;
-    pageSize: number;
-  }>({
+  private readonly _params = signal<IListParams>({
     search: '',
     sort: undefined,
     pageNumber: 0,
@@ -58,12 +60,10 @@ export class CategoryListService {
   }
 
   private _initSubscription(): void {
-    // Смена параметров: отменяет текущую загрузку и начинает новый запрос
     const loadingData$ = this.reset$.pipe(
       tap(() => this.cancelLoadMore$.next()),
       switchMap(() => this.fetchSource(false)),
     );
-    // Подгрузка страниц: игнорирует новые вызовы пока идёт запрос
     const uploadingData$ = this.loadMore$.pipe(
       exhaustMap(() => this.fetchSource(true).pipe(takeUntil(this.cancelLoadMore$))),
     );
@@ -79,11 +79,6 @@ export class CategoryListService {
     this._params.update((params) => ({ ...params, ...patch, pageNumber: 0 }));
     this._hasMore.set(true);
     this.reset$.next();
-  }
-
-  /** Алиас для обновления поискового запроса */
-  public search(query: string): void {
-    this.updateParams({ search: query });
   }
 
   /** Переключает сортировку по циклу: нет → asc → desc → нет.
@@ -111,65 +106,56 @@ export class CategoryListService {
     }
   }
 
-  /** Создать категорию; добавляет результат в начало списка */
+  /** Создать категорию */
   public add(form: ICategoryForm): Observable<ICategory> {
     return this.api.create(form).pipe(
-      tap((newItem) => {
-        if (newItem?.id) {
-          this._items.update((list) => [newItem, ...list]);
-        } else {
-          this._reload();
-        }
+      tap(() => {
+        this.updateParams({});
       }),
     );
   }
 
   /** Обновить категорию; заменяет запись в списке по id */
-  public update(updated: ICategory, isOptimistic: boolean = true): Observable<ICategory> {
+  public update(updated: ICategory, isOptimistic = true): Observable<ICategory> {
     const request$ = this.api.update(updated.id, { name: updated.name });
 
     if (!isOptimistic) {
-      return request$.pipe(finalize(() => this._reload()));
+      return request$.pipe(finalize(() => this.updateParams({})));
     }
 
-    return defer(() => {
-      this._items.update((list) => list.map((item) => (item.id === updated.id ? updated : item)));
-
-      return request$.pipe(
-        catchError((error) => {
-          this._reload();
-
-          return throwError(() => error);
-        }),
-      );
-    });
+    return this._optimisticUpdate(
+      () =>
+        this._items.update((list) => list.map((item) => (item.id === updated.id ? updated : item))),
+      request$,
+    );
   }
 
   /** Удалить категорию; убирает запись из списка */
-  public delete(id: number, isOptimistic: boolean = true): Observable<void> {
+  public delete(id: number, isOptimistic = true): Observable<void> {
     const request$ = this.api.delete(id);
 
     if (!isOptimistic) {
-      return request$.pipe(finalize(() => this._reload()));
+      return request$.pipe(finalize(() => this.updateParams({})));
     }
 
+    return this._optimisticUpdate(
+      () => this._items.update((list) => list.filter((item) => item.id !== id)),
+      request$,
+    );
+  }
+
+  private _optimisticUpdate<T>(apply: () => void, request$: Observable<T>): Observable<T> {
     return defer(() => {
-      this._items.update((list) => list.filter((item) => item.id !== id));
+      apply();
 
       return request$.pipe(
         catchError((error) => {
-          this._reload();
+          this.updateParams({});
 
           return throwError(() => error);
         }),
       );
     });
-  }
-
-  private _reload(): void {
-    this._params.update((params) => ({ ...params, pageNumber: 0 }));
-    this._hasMore.set(true);
-    this.reset$.next();
   }
 
   private fetchSource(forUpdate: boolean): Observable<ICategoriesListResult> {

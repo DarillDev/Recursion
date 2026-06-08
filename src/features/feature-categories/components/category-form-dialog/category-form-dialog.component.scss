@@ -1,13 +1,10 @@
-.category-form-dialog {
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-  &__footer {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-  }
+.footer {
+  display: flex;
+  gap: 8px;
 }

@@ -2,7 +2,7 @@
   display: contents;
 }
 
-.login-card {
+.card {
   display: flex;
   flex-direction: column;
   gap: 25px;
@@ -13,7 +13,7 @@
   background: var(--color-white);
 }
 
-.login-card__title {
+.title {
   margin: 0;
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-medium);
@@ -22,19 +22,19 @@
   text-align: center;
 }
 
-.login-card__fields {
+.fields {
   display: flex;
   flex-direction: column;
   gap: var(--gap-md);
 }
 
-.login-card__error {
+.error {
   margin: 0;
   font-size: var(--font-size-sm);
   color: var(--color-error);
 }
 
-.login-card__action {
+.action {
   display: flex;
   justify-content: center;
 }

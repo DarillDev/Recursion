@@ -4,7 +4,7 @@
   gap: var(--gap-xs);
 }
 
-.ui-kit-form-field__wrapper {
+.wrapper {
   display: flex;
   align-items: center;
   gap: var(--gap-sm);
@@ -40,14 +40,14 @@
   }
 }
 
-.ui-kit-form-field__prefix,
-.ui-kit-form-field__suffix {
+.prefix,
+.suffix {
   display: flex;
   align-items: center;
   flex-shrink: 0;
 }
 
-.ui-kit-form-field__hint {
+.hint {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
 

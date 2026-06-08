@@ -13,6 +13,7 @@
       "@shared/api/config": ["src/shared/api/config/index.ts"],
       "@shared/api/*": ["src/shared/api/controllers/*/index.ts"],
       "@shared/auth": ["src/shared/auth"],
+      "@shared/models": ["src/shared/models/index.ts"],
       "@shared/ui-kit/*": ["src/shared/ui-kit/*/index.ts"],
       "@shared/utils/*": ["src/shared/utils/*/index.ts"],
 
