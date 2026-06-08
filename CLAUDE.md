@@ -207,7 +207,7 @@ ESLint enforces (all `error`):
 - **No `any`** — forbidden everywhere except `*.spec.ts`
 - **Explicit access modifiers** on all class members (`public` / `private` / `protected`) — конструкторы исключены
 - **`readonly`** on properties that are never reassigned
-- **Naming prefixes**: interfaces → `I`, type aliases → `T`, enums → `E`, enum members → `UPPER_CASE`
+- **Naming prefixes**: interfaces → `I`, type aliases → `T`, enums → `E`, enum members → `UPPER_CASE` или `PascalCase`
 - **Explicit return types** on functions (expressions and typed function expressions are exempt)
 - **No floating promises** — always `await` or chain `.catch()`
 - **`type` imports**: `import type { Foo } from '...'` for type-only imports

@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { map } from 'rxjs';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { CategoriesApiService, type ICategory } from '@shared/api/categories';
 import type { ICategoryForm } from '../../interfaces/category-form.interface';
@@ -33,9 +35,31 @@ export class CategoryFormDialogComponent {
       [Validators.required],
       [nameExistsValidator(this.categoriesService, this.data?.id ?? null)],
     ],
-    description: [this.data?.description ?? ''],
   });
 
+  private readonly formStatus = toSignal(this.form.statusChanges, {
+    initialValue: this.form.status,
+  });
+
+  private readonly formValue = toSignal(
+    this.form.valueChanges.pipe(map(() => this.form.getRawValue())),
+    { initialValue: this.form.getRawValue() },
+  );
+
+  protected readonly isSaveDisabled = computed(() => {
+    const status = this.formStatus();
+
+    if (status === 'INVALID' || status === 'PENDING') {
+      return true;
+    }
+
+    if (!this.isEditMode) {
+      return false;
+    }
+
+    const { name } = this.formValue();
+    return name.trim() === (this.data?.name ?? '');
+  });
 
   protected onSubmit(): void {
     if (this.form.status !== 'VALID') {

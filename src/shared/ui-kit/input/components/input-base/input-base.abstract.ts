@@ -1,6 +1,8 @@
 import { Directive, input } from '@angular/core';
-import type { TNillable } from 'src/shared/models';
+import type { ValidationErrors } from '@angular/forms';
 import { AControlValueAccessor } from 'src/shared/models';
+
+import type { TNillable } from 'src/shared/models';
 
 @Directive()
 export abstract class AInputBaseControl<T> extends AControlValueAccessor<T> {
@@ -12,5 +14,13 @@ export abstract class AInputBaseControl<T> extends AControlValueAccessor<T> {
 
   public onBlur(): void {
     this.onTouched();
+  }
+
+  public get touched(): boolean {
+    return Boolean(this.ngControl?.control?.touched);
+  }
+
+  public get controlErrors(): ValidationErrors | null | undefined {
+    return this.ngControl?.control?.errors;
   }
 }

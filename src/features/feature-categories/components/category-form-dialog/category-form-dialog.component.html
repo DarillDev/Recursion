@@ -1,22 +1,12 @@
 <ui-kit-modal-container [title]="title">
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    @if (isEditMode && data) {
-      <p class="category-form-dialog__id" data-testid="category-id">
-        <span class="category-form-dialog__id-label">Id:</span> {{ data.id }}
-      </p>
-    }
-
-    <ui-kit-input-field label="Название" formControlName="name" />
+  <form class="category-form-dialog__form" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <ui-kit-input-field label="Name" formControlName="name" />
 
     <div footer class="category-form-dialog__footer">
       <ui-kit-button type="button" variant="secondary" data-testid="cancel-btn" (click)="cancel()">
-        Отмена
+        Close
       </ui-kit-button>
-      @if (!isEditMode || data?.canEdit) {
-        <ui-kit-button type="submit" data-testid="save-btn">
-          Сохранить
-        </ui-kit-button>
-      }
+      <ui-kit-button type="submit" [disabled]="isSaveDisabled()" data-testid="save-btn">Save</ui-kit-button>
     </div>
   </form>
 </ui-kit-modal-container>

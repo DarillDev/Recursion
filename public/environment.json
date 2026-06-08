@@ -1,5 +1,5 @@
 {
-  "apiUrl": "https://zidium3-backend.zidium.net",
+  "apiUrl": "/api",
   "authUrl": "https://zidium3-backend.zidium.net",
-  "title": "Indigo Soft"
+  "title": "Recursion"
 }

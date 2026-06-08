@@ -1,11 +1,8 @@
 .category-form-dialog {
-  &__id {
-    margin: 0 0 16px;
-    color: var(--color-text-secondary);
-  }
-
-  &__id-label {
-    font-weight: 600;
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
   &__footer {

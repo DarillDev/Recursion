@@ -1,17 +1,25 @@
 $col-template: 1fr 1fr 80px;
 
-.category-table {
+:host {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  min-height: 100%;
+}
+
+.category-table {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  // border: 1px solid var(--color-border);
   overflow: hidden;
 
   &__head {
     display: grid;
     grid-template-columns: $col-template;
     background: var(--color-bg-secondary);
+    border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
 
@@ -82,7 +90,9 @@ $col-template: 1fr 1fr 80px;
     background: transparent;
     color: var(--color-text-secondary);
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
 
     &:hover {
       background: var(--color-bg-hover);
@@ -96,8 +106,29 @@ $col-template: 1fr 1fr 80px;
 
   &__loading,
   &__empty {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    inset: 0;
     padding: 24px;
     text-align: center;
     color: var(--color-text-secondary);
+  }
+
+  &__spinner {
+    display: block;
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary, #3b82f6);
+    border-radius: 50%;
+    animation: spinner-rotate 0.7s linear infinite;
+  }
+
+  @keyframes spinner-rotate {
+    to {
+      transform: rotate(360deg);
+    }
   }
 }

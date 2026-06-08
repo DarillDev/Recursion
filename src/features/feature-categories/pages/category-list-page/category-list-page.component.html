@@ -1,55 +1,27 @@
 <div class="category-list-page">
   <div class="category-list-page__header">
     <h1 class="category-list-page__title">Categories</h1>
-    @if (canAdd()) {
-      <ui-kit-button variant="primary" (click)="onAdd()">Добавить</ui-kit-button>
+    @if (canEdit()) {
+      <ui-kit-button variant="primary" (click)="onAdd()">+ Add</ui-kit-button>
     }
   </div>
 
   <ui-kit-search-input
     class="category-list-page__search"
-    placeholder="Поиск..."
-    [ngModel]="searchValue()"
-    (ngModelChange)="onSearchChange($event)"
+    placeholder="Search"
+    [formControl]="searchControl"
   />
 
-  <div class="category-list-page__table-container" (scroll)="onScroll($event)">
-    <table class="category-list-page__table">
-      <thead>
-        <tr>
-          <th class="category-list-page__col-id">Id</th>
-          <th
-            class="category-list-page__col-name category-list-page__sortable"
-            (click)="onSortToggle()"
-          >
-            Name
-            <span class="category-list-page__sort-icon">{{ sortDesc() ? '↓' : '↑' }}</span>
-          </th>
-          <th class="category-list-page__col-actions"></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of items(); track item.id) {
-          <tr class="category-list-page__row">
-            <td class="category-list-page__col-id">{{ item.id }}</td>
-            <td class="category-list-page__col-name">{{ item.name }}</td>
-            <td class="category-list-page__col-actions">
-              @if (item.canEdit) {
-                <ui-kit-button variant="secondary" (click)="onEdit(item)">Изменить</ui-kit-button>
-                <ui-kit-button variant="danger" (click)="onDelete(item)">Удалить</ui-kit-button>
-              }
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-
-    @if (isLoading()) {
-      <div class="category-list-page__loading">Загрузка...</div>
-    }
-
-    @if (!isLoading() && items().length === 0) {
-      <div class="category-list-page__empty">Записей не найдено</div>
-    }
-  </div>
+  <app-category-table
+    class="category-list-page__table"
+    [items]="items()"
+    [isLoading]="isLoading()"
+    [sort]="sort()"
+    [canEdit]="canEdit()"
+    [hasMore]="hasMore()"
+    (sortToggle)="onSortToggle($event)"
+    (edit)="onEdit($event)"
+    (delete)="onDelete($event)"
+    (loadMore)="onLoadMore()"
+  />
 </div>

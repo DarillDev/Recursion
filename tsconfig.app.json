@@ -14,6 +14,7 @@
       "@shared/api/*": ["src/shared/api/controllers/*/index.ts"],
       "@shared/auth": ["src/shared/auth"],
       "@shared/ui-kit/*": ["src/shared/ui-kit/*/index.ts"],
+      "@shared/utils/*": ["src/shared/utils/*/index.ts"],
 
       "@layouts/*": ["src/layouts/*/index.ts"],
       "@features/*": ["src/features/*/index.ts"]

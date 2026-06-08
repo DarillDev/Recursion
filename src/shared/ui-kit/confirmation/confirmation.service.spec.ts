@@ -22,7 +22,7 @@ describe('ConfirmationService', () => {
 
   it('opens ConfirmationDialogComponent with title and description', () => {
     modalSpy.open.mockReturnValue(of(true));
-    service.confirm('Delete item', 'Cannot be undone').subscribe();
+    service.confirm({ title: 'Delete item', description: 'Cannot be undone' }).subscribe();
     expect(modalSpy.open).toHaveBeenCalledWith(
       ConfirmationDialogComponent,
       { title: 'Delete item', description: 'Cannot be undone' },
@@ -31,13 +31,13 @@ describe('ConfirmationService', () => {
 
   it('returns true when user confirms', async () => {
     modalSpy.open.mockReturnValue(of(true));
-    const result = await firstValueFrom(service.confirm('t', 'd'));
+    const result = await firstValueFrom(service.confirm({ title: 't', description: 'd' }));
     expect(result).toBe(true);
   });
 
   it('returns false when user cancels (dialog returns undefined)', async () => {
     modalSpy.open.mockReturnValue(of(undefined));
-    const result = await firstValueFrom(service.confirm('t', 'd'));
+    const result = await firstValueFrom(service.confirm({ title: 't', description: 'd' }));
     expect(result).toBe(false);
   });
 });

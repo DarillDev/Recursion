@@ -2,61 +2,62 @@
   <div class="category-table__head">
     <div
       class="category-table__col-name category-table__sortable"
+      data-testid="sort-id"
+      role="button"
+      tabindex="0"
+      (click)="sortToggle.emit('id')"
+      (keydown.enter)="sortToggle.emit('id')"
+      (keydown.space)="sortToggle.emit('id')"
+    >
+      ID
+      @if (sort()?.field === 'id') {
+        <span class="category-table__sort-icon">{{ sort()?.dir === 'asc' ? '↑' : '↓' }}</span>
+      }
+    </div>
+
+    <div
+      class="category-table__col-desc category-table__sortable"
       data-testid="sort-name"
       role="button"
       tabindex="0"
-      (click)="sortToggle.emit()"
-      (keydown.enter)="sortToggle.emit()"
-      (keydown.space)="sortToggle.emit()"
+      (click)="sortToggle.emit('name')"
+      (keydown.enter)="sortToggle.emit('name')"
+      (keydown.space)="sortToggle.emit('name')"
     >
       Name
-      <span class="category-table__sort-icon">{{ sortDesc() ? '↓' : '↑' }}</span>
-    </div>
-    <div
-      class="category-table__col-desc category-table__sortable"
-      data-testid="sort-desc"
-      role="button"
-      tabindex="0"
-      (click)="sortToggle.emit()"
-      (keydown.enter)="sortToggle.emit()"
-      (keydown.space)="sortToggle.emit()"
-    >
-      Description
+      @if (sort()?.field === 'name') {
+        <span class="category-table__sort-icon">{{ sort()?.dir === 'asc' ? '↑' : '↓' }}</span>
+      }
     </div>
     <div class="category-table__col-actions"></div>
   </div>
 
-  <cdk-virtual-scroll-viewport
-    class="category-table__viewport"
-    itemSize="49"
-    (scrolledIndexChange)="onScrolledIndex($event)"
-  >
+  <cdk-virtual-scroll-viewport class="category-table__viewport" [itemSize]="itemSize()">
     <div
       class="category-table__row"
-      *cdkVirtualFor="let item of items()"
-      role="button"
+      *cdkVirtualFor="let item of items(); trackById"
       tabindex="0"
-      (click)="canEdit() && edit.emit(item)"
       (keydown.enter)="canEdit() && edit.emit(item)"
       (keydown.space)="canEdit() && edit.emit(item)"
     >
-      <div class="category-table__col-name">{{ item.name }}</div>
-      <div class="category-table__col-desc">{{ item.description }}</div>
+      <div class="category-table__col-name">{{ item.id }}</div>
+      <div class="category-table__col-desc">{{ item.name }}</div>
       <div class="category-table__col-actions">
         @if (canEdit()) {
           <button
             class="category-table__icon-btn category-table__icon-btn--edit"
             [attr.data-testid]="'edit-' + item.id"
-            title="Редактировать"
-            (click)="edit.emit(item); $event.stopPropagation()"
+            title="Edit"
+            (click)="edit.emit(item)"
           >
             <ui-kit-icon name="edit" [size]="16" />
           </button>
+
           <button
             class="category-table__icon-btn category-table__icon-btn--delete"
             [attr.data-testid]="'delete-' + item.id"
             title="Удалить"
-            (click)="delete.emit(item); $event.stopPropagation()"
+            (click)="delete.emit(item)"
           >
             <ui-kit-icon name="delete" [size]="16" />
           </button>
@@ -66,7 +67,9 @@
   </cdk-virtual-scroll-viewport>
 
   @if (isLoading()) {
-    <div class="category-table__loading" data-testid="loading">Загрузка...</div>
+    <div class="category-table__loading" data-testid="loading">
+      <span class="category-table__spinner"></span>
+    </div>
   }
 
   @if (!isLoading() && items().length === 0) {

@@ -9,9 +9,21 @@ import type { IConfirmationDialogData } from './interfaces/confirmation-dialog-d
 export class ConfirmationService {
   private readonly modalService = inject(ModalService);
 
-  public confirm(title: string, description: string): Observable<boolean> {
+  private readonly defaultTitle = 'Confirmation';
+  private readonly defaultDescription = 'Confirm this action.';
+  private readonly defaultConfirmButtonLabel = 'Confirm';
+  private readonly defaultCancelButtonLabel = 'Delete';
+
+  public confirm(options?: Partial<IConfirmationDialogData>): Observable<boolean> {
+    const data: IConfirmationDialogData = {
+      title: options?.title ?? this.defaultTitle,
+      description: options?.description ?? this.defaultDescription,
+      confirmButtonLabel: options?.confirmButtonLabel ?? this.defaultCancelButtonLabel,
+      cancelButtonLabel: options?.cancelButtonLabel ?? this.defaultCancelButtonLabel,
+    };
+
     return this.modalService
-      .open<boolean, IConfirmationDialogData>(ConfirmationDialogComponent, { title, description })
+      .open<boolean, IConfirmationDialogData>(ConfirmationDialogComponent, data)
       .pipe(map((result) => result ?? false));
   }
 }
