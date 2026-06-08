@@ -1,0 +1,11 @@
+.confirmation-dialog {
+  &__description {
+    margin: 0;
+  }
+
+  &__footer {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+}
