@@ -8,8 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, filter, switchMap } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { Subject, debounceTime, filter, switchMap } from 'rxjs';
 import { CategoriesService } from '@shared/api/categories';
 import type { ICategory } from '@shared/api/categories';
 import { ModalService } from '@shared/ui-kit/modal';
