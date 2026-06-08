@@ -1,4 +1,7 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { CategoryTableComponent } from './category-table.component';
 import type { ICategory } from '@shared/api/categories';
 
@@ -13,13 +16,32 @@ function createFixture(
     hasMore: boolean;
   }> = {},
 ): ComponentFixture<CategoryTableComponent> {
+  const items = overrides.items ?? [];
   const fixture = TestBed.createComponent(CategoryTableComponent);
-  fixture.componentRef.setInput('items', overrides.items ?? []);
+  fixture.componentRef.setInput('items', items);
   fixture.componentRef.setInput('isLoading', overrides.isLoading ?? false);
   fixture.componentRef.setInput('sortDesc', overrides.sortDesc ?? false);
   fixture.componentRef.setInput('canEdit', overrides.canEdit ?? true);
   fixture.componentRef.setInput('hasMore', overrides.hasMore ?? false);
   fixture.detectChanges();
+
+  // JSDOM has no layout engine so cdk-virtual-scroll-viewport measures 0px height
+  // and renders nothing. Force it to render all items directly.
+  const vpDe = fixture.debugElement.query(By.directive(CdkVirtualScrollViewport));
+  if (vpDe && items.length > 0) {
+    const vp = vpDe.componentInstance as CdkVirtualScrollViewport;
+    const zone = TestBed.inject(NgZone);
+    zone.run(() => {
+      vp.setTotalContentSize(items.length * 49);
+      vp.setRenderedRange({ start: 0, end: items.length });
+    });
+    // setRenderedRange schedules markForCheck via a microtask (Promise.resolve).
+    // Marking the root CDR for check explicitly ensures OnPush re-enters the view,
+    // so CdkVirtualForOf.ngDoCheck runs and renders items into the DOM.
+    fixture.componentRef.injector.get(ChangeDetectorRef).markForCheck();
+    fixture.detectChanges();
+  }
+
   return fixture;
 }
 

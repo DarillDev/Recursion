@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { CdkVirtualScrollViewport, CdkVirtualForOf, CdkFixedSizeVirtualScroll } from '@angular/cdk/scrolling';
 import { IconComponent } from '@shared/ui-kit/icon';
 import type { ICategory } from '@shared/api/categories';
 
@@ -6,7 +7,7 @@ const LOAD_MORE_THRESHOLD = 5;
 
 @Component({
   selector: 'app-category-table',
-  imports: [IconComponent],
+  imports: [CdkVirtualScrollViewport, CdkFixedSizeVirtualScroll, CdkVirtualForOf, IconComponent],
   templateUrl: './category-table.component.html',
   styleUrl: './category-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,12 +23,6 @@ export class CategoryTableComponent {
   public readonly edit = output<ICategory>();
   public readonly delete = output<ICategory>();
   public readonly loadMore = output<void>();
-
-  protected onScroll(event: Event): void {
-    const el = event.target as HTMLElement;
-    const firstVisible = Math.floor(el.scrollTop / 49);
-    this.onScrolledIndex(firstVisible);
-  }
 
   protected onScrolledIndex(firstVisible: number): void {
     if (this.hasMore() && !this.isLoading()) {
