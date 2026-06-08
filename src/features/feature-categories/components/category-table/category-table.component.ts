@@ -32,7 +32,6 @@ export class CategoryTableComponent implements OnInit {
   public readonly items = input.required<ICategory[]>();
   public readonly isLoading = input.required<boolean>();
   public readonly sort = input.required<ISort | undefined>();
-  public readonly canEdit = input.required<boolean>();
   public readonly hasMore = input.required<boolean>();
   public readonly itemSize = input(50);
   public readonly itemsThreshold = input(5);
@@ -45,7 +44,7 @@ export class CategoryTableComponent implements OnInit {
   private readonly viewport = viewChild.required(CdkVirtualScrollViewport);
 
   protected onRowActivate(item: ICategory): void {
-    if (this.canEdit()) {
+    if (item.canEdit) {
       this.edit.emit(item);
     }
   }

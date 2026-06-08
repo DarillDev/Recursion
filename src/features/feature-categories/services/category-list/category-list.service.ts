@@ -18,8 +18,8 @@ import {
   type ICategoriesListResult,
   type ICategory,
 } from '@shared/api/categories';
-import type { ICategoryForm } from '../../../../interfaces/category-form.interface';
-import type { ISort } from '../../../../models/interfaces/sort.interface';
+import { ISort } from '../../models/interfaces/sort.interface';
+import { ICategoryForm } from '../../interfaces/category-form.interface';
 
 interface IListParams {
   search: string;
@@ -42,13 +42,13 @@ export class CategoryListService {
 
   private readonly _items = signal<ICategory[]>([]);
   private readonly _hasMore = signal(true);
-  private readonly _canEdit = signal(false);
+  private readonly _canAdd = signal(false);
   private readonly _isLoading = signal(false);
 
   public readonly items: Signal<ICategory[]> = this._items.asReadonly();
   public readonly isLoading: Signal<boolean> = this._isLoading.asReadonly();
   public readonly hasMore: Signal<boolean> = this._hasMore.asReadonly();
-  public readonly canEdit: Signal<boolean> = this._canEdit.asReadonly();
+  public readonly canAdd: Signal<boolean> = this._canAdd.asReadonly();
   public readonly sort = computed(() => this._params().sort);
 
   private readonly reset$ = new Subject<void>();
@@ -176,7 +176,7 @@ export class CategoryListService {
           const items = hasMore ? result.items.slice(0, pageSize) : result.items;
 
           this._hasMore.set(hasMore);
-          this._canEdit.set(result.canEdit);
+          this._canAdd.set(result.canAdd);
 
           if (forUpdate) {
             this._items.update((list) => [...list, ...items]);

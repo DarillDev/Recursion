@@ -36,27 +36,19 @@
     class="row"
     *cdkVirtualFor="let item of items(); trackById"
     tabindex="0"
+    (click)="onRowActivate(item)"
     (keydown.enter)="onRowActivate(item)"
     (keydown.space)="onRowActivate(item)"
   >
     <div>{{ item.id }}</div>
     <div>{{ item.name }}</div>
     <div class="col-actions">
-      @if (canEdit()) {
-        <button
-          class="icon-btn"
-          [attr.data-testid]="'edit-' + item.id"
-          title="Edit"
-          (click)="edit.emit(item)"
-        >
-          <ui-kit-icon name="edit" [size]="16" />
-        </button>
-
+      @if (item.canDelete) {
         <button
           class="icon-btn icon-btn--delete"
           [attr.data-testid]="'delete-' + item.id"
           title="Delete"
-          (click)="delete.emit(item)"
+          (click)="$event.stopPropagation(); delete.emit(item)"
         >
           <ui-kit-icon name="delete" [size]="16" />
         </button>

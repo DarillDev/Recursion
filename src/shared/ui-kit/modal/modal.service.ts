@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import type { Injector } from '@angular/core';
 import type { ComponentType } from '@angular/cdk/overlay';
 import { Dialog } from '@angular/cdk/dialog';
 import type { Observable } from 'rxjs';
@@ -10,7 +11,8 @@ export class ModalService {
   public open<TResult, TData = unknown>(
     component: ComponentType<unknown>,
     data?: TData,
+    injector?: Injector,
   ): Observable<TResult | undefined> {
-    return this.dialog.open<TResult>(component, { data }).closed;
+    return this.dialog.open<TResult>(component, { data, injector }).closed;
   }
 }

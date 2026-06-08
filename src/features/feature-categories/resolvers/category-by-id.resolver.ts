@@ -3,11 +3,9 @@ import type { ResolveFn, ActivatedRouteSnapshot, RouterStateSnapshot } from '@an
 import type { ICategory } from '@shared/api/categories';
 import { CategoriesApiService } from '@shared/api/categories';
 
-export const categoryByIdResolver: ResolveFn<ICategory> = (
-  route: ActivatedRouteSnapshot,
-  _state: RouterStateSnapshot,
-) => {
+export const categoryByIdResolver: ResolveFn<ICategory> = (route: ActivatedRouteSnapshot) => {
   const id = Number(route.paramMap.get('id'));
+  const categoriesApiService = inject(CategoriesApiService);
 
-  return inject(CategoriesApiService).getById(id);
+  return categoriesApiService.getById(id);
 };

@@ -1,21 +1,27 @@
 import type { OnInit } from '@angular/core';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, Injector } from '@angular/core';
 import { debounceTime, distinctUntilChanged, filter, switchMap, take } from 'rxjs';
 import type { ICategory } from '@shared/api/categories';
 import { ModalService } from '@shared/ui-kit/modal';
 import { ConfirmationService } from '@shared/ui-kit/confirmation';
 import { CategoryFormDialogComponent } from '../../components/category-form-dialog/category-form-dialog.component';
-import type { ICategoryForm } from '../../interfaces/category-form.interface';
 import { ButtonComponent } from '@shared/ui-kit/button';
 import { SearchInputComponent } from '@shared/ui-kit/input/components/search-input';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { CategoryListService } from './services/category-list/category-list.service';
 import { CategoryTableComponent } from '../../components/category-table';
 import { createDestroyer } from '@shared/utils/create-destroyer';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
+import { CategoryListService } from '../../services/category-list/category-list.service';
 
 @Component({
   selector: 'app-category-list-page',
-  imports: [ButtonComponent, SearchInputComponent, ReactiveFormsModule, CategoryTableComponent],
+  imports: [
+    ButtonComponent,
+    SearchInputComponent,
+    ReactiveFormsModule,
+    CategoryTableComponent,
+    RouterOutlet,
+  ],
   templateUrl: './category-list-page.component.html',
   styleUrl: './category-list-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +31,10 @@ export class CategoryListPageComponent implements OnInit {
   private readonly listService = inject(CategoryListService);
   private readonly modalService = inject(ModalService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly injector = inject(Injector);
+
   private readonly destroy = createDestroyer();
 
   protected readonly searchControl = new FormControl('', { nonNullable: true });
@@ -33,7 +43,7 @@ export class CategoryListPageComponent implements OnInit {
   protected readonly isLoading = this.listService.isLoading;
   protected readonly hasMore = this.listService.hasMore;
   protected readonly sort = this.listService.sort;
-  protected readonly canEdit = this.listService.canEdit;
+  protected readonly canAdd = this.listService.canAdd;
 
   public ngOnInit(): void {
     this.searchControl.valueChanges
@@ -51,31 +61,21 @@ export class CategoryListPageComponent implements OnInit {
 
   protected onAdd(): void {
     this.modalService
-      .open<ICategoryForm, null>(CategoryFormDialogComponent, null)
-      .pipe(
-        filter(Boolean),
-        take(1),
-        switchMap((form) => this.listService.add(form)),
-        this.destroy(),
-      )
-      .subscribe();
+      .open<boolean, null>(CategoryFormDialogComponent, null, this.injector)
+      .pipe(filter(Boolean), take(1), this.destroy())
+      .subscribe(() => this.listService.updateParams({}));
   }
 
   protected onEdit(category: ICategory): void {
-    this.modalService
-      .open<ICategoryForm, ICategory>(CategoryFormDialogComponent, category)
-      .pipe(
-        filter(Boolean),
-        take(1),
-        switchMap((form) => this.listService.update({ ...category, ...form })),
-        this.destroy(),
-      )
-      .subscribe();
+    void this.router.navigate([category.id], { relativeTo: this.route });
   }
 
   protected onDelete(category: ICategory): void {
     this.confirmationService
-      .confirm({ description: 'Are you sure you want to delete this item?', confirmButtonLabel: 'Delete' })
+      .confirm({
+        description: 'Are you sure you want to delete this item?',
+        confirmButtonLabel: 'Delete',
+      })
       .pipe(
         filter(Boolean),
         take(1),
