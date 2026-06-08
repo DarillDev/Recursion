@@ -13,7 +13,7 @@
         Отмена
       </ui-kit-button>
       @if (!isEditMode || data?.canEdit) {
-        <ui-kit-button type="button" variant="primary" data-testid="save-btn" (click)="onSubmit()">
+        <ui-kit-button type="submit" data-testid="save-btn">
           Сохранить
         </ui-kit-button>
       }

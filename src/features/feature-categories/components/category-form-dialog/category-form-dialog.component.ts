@@ -26,7 +26,7 @@ export class CategoryFormDialogComponent {
   private readonly categoriesService = inject(CategoriesService);
 
   protected readonly data = inject<ICategory | null>(DIALOG_DATA, { optional: true });
-  protected readonly isEditMode = this.data !== null && this.data !== undefined;
+  protected readonly isEditMode = this.data !== null;
   protected readonly title = this.isEditMode ? 'Редактировать категорию' : 'Добавить категорию';
 
   protected readonly form = this.fb.nonNullable.group({

@@ -79,7 +79,7 @@ describe('CategoryFormDialogComponent', () => {
     fixture.componentInstance['form'].controls.name.setValue('New Cat');
     await vi.advanceTimersByTimeAsync(400);
     fixture.detectChanges();
-    fixture.debugElement.query(By.css('[data-testid="save-btn"]')).nativeElement.click();
+    fixture.debugElement.query(By.css('form')).triggerEventHandler('ngSubmit', null);
     fixture.detectChanges();
     expect(dialogRefSpy.close).toHaveBeenCalledWith({ name: 'New Cat' });
     vi.useRealTimers();
