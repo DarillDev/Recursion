@@ -29,7 +29,7 @@ const typescriptStrictRules = {
     { selector: 'interface', format: ['PascalCase'], prefix: ['I'] },
     { selector: 'typeAlias', format: ['PascalCase'], prefix: ['T'] },
     { selector: 'enum', format: ['PascalCase'], prefix: ['E'] },
-    { selector: 'enumMember', format: ['UPPER_CASE'] },
+    { selector: 'enumMember', format: ['UPPER_CASE', 'PascalCase'] },
   ],
 };
 

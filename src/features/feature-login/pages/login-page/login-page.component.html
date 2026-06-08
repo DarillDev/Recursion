@@ -1,7 +1,7 @@
-<div class="login-card">
-  <h1 class="login-card__title">Logon to Zidium</h1>
+<div class="card">
+  <h1 class="title">Logon to Zidium</h1>
 
-  <form class="login-card__fields" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <form class="fields" [formGroup]="form" (ngSubmit)="onSubmit()">
     <ui-kit-input-field
       formControlName="email"
       label="Login"
@@ -15,10 +15,10 @@
     />
 
     @if (loginError(); as error) {
-      <p class="login-card__error">{{ error }}</p>
+      <p class="error">{{ error }}</p>
     }
 
-    <div class="login-card__action">
+    <div class="action">
       <ui-kit-button variant="primary" type="submit">Logon</ui-kit-button>
     </div>
   </form>

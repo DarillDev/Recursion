@@ -123,14 +123,55 @@ Never put HTTP logic in components. Never put UI state in services (keep it in t
 ```
 /login         → PublicLayout  → features/feature-login/pages/login-page
 /categories    → InternalLayout (authGuard) → features/feature-categories/pages/category-list-page
-/              → redirect → /categories
+/              → (не авторизован) redirect → /login
+/              → (авторизован)   redirect → /categories
 ```
+
+**`AuthService` управляет навигацией** — не вызывай `router.navigate` вручную после login/logout:
+- `authService.login()` — сохраняет токен и редиректит на `onAuthenticated` (`/categories`)
+- `authService.logout()` — очищает токен и редиректит на `onUnauthenticated` (`/login`)
+- Редиректы настраиваются через `IAuthConfig.redirects` в `app.config-resolver.ts`
 
 ### UI
 
 - No UI component library — all components are built from scratch to match Figma designs.
-- Shared primitives (table, dialog, form-field, search-input) live in `shared/ui-kit/`.
 - Add/Edit/Delete actions open as modal dialogs — no separate routes for them.
+
+Текущие компоненты `shared/ui-kit/`:
+
+| Компонент | Selector | Назначение |
+|---|---|---|
+| `button` | `ui-kit-button` | Кнопка: `variant="primary\|secondary\|danger"`, `[disabled]`, `[type]` |
+| `icon` | `ui-kit-icon` | SVG-спрайт: `name="..."` (EIconName), `[size]` |
+| `modal` | `ui-kit-modal-container` | Обёртка диалога: `[title]`, `<ng-content select="[footer]">` |
+| `form-field` | `ui-kit-form-field` | Враппер поля формы с label/hint/error |
+| `input` | `ui-kit-input-field` | Текстовый input с CVA |
+| `input` | `ui-kit-search-input` | Поле поиска |
+
+**Modal** использует `@angular/cdk/dialog`. Открывать через `ModalService`:
+
+```ts
+// в диалоговом компоненте
+@Component({
+  imports: [ModalContainerComponent],
+  template: `
+    <ui-kit-modal-container title="Edit">
+      <!-- body -->
+      <div footer>
+        <ui-kit-button variant="secondary" (click)="close()">Close</ui-kit-button>
+        <ui-kit-button variant="primary" (click)="save()">Save</ui-kit-button>
+      </div>
+    </ui-kit-modal-container>
+  `,
+})
+export class MyDialogComponent {
+  private readonly dialogRef = inject(DialogRef);
+  protected close(): void { this.dialogRef.close(); }
+}
+
+// открытие
+this.modalService.open<TResult>(MyDialogComponent, data).subscribe(result => { ... });
+```
 
 ## Architecture
 
@@ -166,7 +207,7 @@ ESLint enforces (all `error`):
 - **No `any`** — forbidden everywhere except `*.spec.ts`
 - **Explicit access modifiers** on all class members (`public` / `private` / `protected`) — конструкторы исключены
 - **`readonly`** on properties that are never reassigned
-- **Naming prefixes**: interfaces → `I`, type aliases → `T`, enums → `E`, enum members → `UPPER_CASE`
+- **Naming prefixes**: interfaces → `I`, type aliases → `T`, enums → `E`, enum members → `UPPER_CASE` или `PascalCase`
 - **Explicit return types** on functions (expressions and typed function expressions are exempt)
 - **No floating promises** — always `await` or chain `.catch()`
 - **`type` imports**: `import type { Foo } from '...'` for type-only imports
@@ -178,6 +219,19 @@ ESLint enforces (all `error`):
 Prettier: single quotes, 100-char line width, Angular HTML parser for templates.
 
 Doc comments (`/** */`) are written in Russian. Single-line `//` comments — only for non-obvious WHY, not WHAT.
+
+## Testing Gotchas
+
+**OnPush компоненты:** изменение свойств `TestHostComponent` не триггерит re-render автоматически. Перед `fixture.detectChanges()` вызывать `cdr.markForCheck()`:
+
+```ts
+const cdr = fixture.debugElement.injector.get(ChangeDetectorRef);
+fixture.componentInstance.someInput = newValue;
+cdr.markForCheck();
+fixture.detectChanges();
+```
+
+**TestHostComponent** тоже должен иметь `changeDetection: ChangeDetectionStrategy.OnPush` — ESLint требует OnPush на всех компонентах, включая тестовые.
 
 ## MCP Servers
 

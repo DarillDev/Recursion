@@ -1,0 +1,68 @@
+<div class="head">
+  <div
+    class="sortable"
+    data-testid="sort-id"
+    role="button"
+    tabindex="0"
+    (click)="sortToggle.emit('id')"
+    (keydown.enter)="sortToggle.emit('id')"
+    (keydown.space)="sortToggle.emit('id')"
+  >
+    ID
+    @if (sort()?.field === 'id') {
+      <span class="sort-icon">{{ sort()?.dir === 'asc' ? '↑' : '↓' }}</span>
+    }
+  </div>
+
+  <div
+    class="sortable"
+    data-testid="sort-name"
+    role="button"
+    tabindex="0"
+    (click)="sortToggle.emit('name')"
+    (keydown.enter)="sortToggle.emit('name')"
+    (keydown.space)="sortToggle.emit('name')"
+  >
+    Name
+    @if (sort()?.field === 'name') {
+      <span class="sort-icon">{{ sort()?.dir === 'asc' ? '↑' : '↓' }}</span>
+    }
+  </div>
+  <div class="col-actions"></div>
+</div>
+
+<cdk-virtual-scroll-viewport class="viewport" [itemSize]="itemSize()">
+  <div
+    class="row"
+    *cdkVirtualFor="let item of items(); trackById"
+    tabindex="0"
+    (click)="onRowActivate(item)"
+    (keydown.enter)="onRowActivate(item)"
+    (keydown.space)="onRowActivate(item)"
+  >
+    <div>{{ item.id }}</div>
+    <div>{{ item.name }}</div>
+    <div class="col-actions">
+      @if (item.canDelete) {
+        <button
+          class="icon-btn icon-btn--delete"
+          [attr.data-testid]="'delete-' + item.id"
+          title="Delete"
+          (click)="$event.stopPropagation(); delete.emit(item)"
+        >
+          <ui-kit-icon name="delete" [size]="16" />
+        </button>
+      }
+    </div>
+  </div>
+</cdk-virtual-scroll-viewport>
+
+@if (isLoading()) {
+  <div class="loading" data-testid="loading">
+    <span class="spinner"></span>
+  </div>
+}
+
+@if (!isLoading() && items().length === 0) {
+  <div class="empty" data-testid="empty">No records found</div>
+}

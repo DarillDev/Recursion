@@ -24,7 +24,7 @@ describe('SidebarComponent', () => {
 
   it('should render nav items', () => {
     fixture.detectChanges();
-    const items = fixture.nativeElement.querySelectorAll('.sidebar__item');
+    const items = fixture.nativeElement.querySelectorAll('.item');
     expect(items.length).toBeGreaterThanOrEqual(2);
   });
 });

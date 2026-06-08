@@ -15,10 +15,10 @@
     (blur)="onBlur()"
   />
 
-  @if (error(); as err) {
-    <span uiKitError>{{ err }}</span>
-  } @else if (ngControl?.control?.errors; as errors) {
-    <span uiKitError>{{ errors | controlErrorText }}</span>
+  @if (error() && touched; as stringError) {
+    <span uiKitError>{{ stringError }}</span>
+  } @else if (controlErrors && touched) {
+    <span uiKitError>{{ controlErrors | controlErrorText }}</span>
   }
 
   @if (hint(); as hint) {

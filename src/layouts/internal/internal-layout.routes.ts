@@ -9,7 +9,7 @@ export const INTERNAL_LAYOUT_ROUTES: Routes = [
       {
         path: 'categories',
         loadChildren: () =>
-          import('src/features/feature-categories').then((m) => m.FEATURE_CATEGORIES_ROUTES),
+          import('@features/feature-categories').then((m) => m.FEATURE_CATEGORIES_ROUTES),
         data: {
           title: 'Categories',
         },

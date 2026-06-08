@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { throwError } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import type { IToken } from '../../interfaces/token.interface';
 import type { ILoginResponse } from '../../interfaces/login-response.interface';
 import { Token } from '../../models/token';

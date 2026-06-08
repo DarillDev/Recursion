@@ -10,7 +10,7 @@ import { buildParams } from './utils/build-params.function';
  */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  protected readonly apiConfig = inject(API_CONFIG);
+  private readonly apiConfig = inject(API_CONFIG);
 
   private readonly httpClient = inject(HttpClient);
 

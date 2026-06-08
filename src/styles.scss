@@ -15,3 +15,33 @@ body {
   color: var(--text-primary);
   background: var(--color-white);
 }
+
+input[uiKitInput] {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  color: var(--color-text-primary);
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:disabled {
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+  }
+}
+
+.cdk-overlay-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.cdk-global-overlay-wrapper {
+  align-items: center !important;
+  justify-content: center !important;
+}

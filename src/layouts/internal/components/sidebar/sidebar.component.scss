@@ -8,32 +8,32 @@
   flex-shrink: 0;
 }
 
-.sidebar__nav {
+.nav {
   display: flex;
   flex-direction: column;
   height: 100%;
   gap: var(--gap-lg);
 }
 
-.sidebar__top {
+.top {
   display: flex;
   justify-content: center;
 }
 
-.sidebar__links {
+.links {
   display: flex;
   flex-direction: column;
   gap: 5px;
   flex: 1;
 }
 
-.sidebar__bottom {
+.bottom {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 
-.sidebar__item {
+.item {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -52,9 +52,10 @@
 
   &--active {
     background: var(--color-selected);
+    color: var(--color-primary);
   }
 }
 
-.sidebar__toggle {
+.toggle {
   color: var(--text-secondary);
 }

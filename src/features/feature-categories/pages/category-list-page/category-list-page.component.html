@@ -1,1 +1,22 @@
-<p>category-list-page works!</p>
+<div class="header">
+  <h1 class="title">Categories</h1>
+  @if (canAdd()) {
+    <ui-kit-button variant="primary" (click)="onAdd()">+ Add</ui-kit-button>
+  }
+</div>
+
+<ui-kit-search-input class="search" placeholder="Search" [formControl]="searchControl" />
+
+<app-category-table
+  class="table"
+  [items]="items()"
+  [isLoading]="isLoading()"
+  [sort]="sort()"
+  [hasMore]="hasMore()"
+  (sortToggle)="onSortToggle($event)"
+  (edit)="onEdit($event)"
+  (delete)="onDelete($event)"
+  (loadMore)="onLoadMore()"
+/>
+
+<router-outlet />

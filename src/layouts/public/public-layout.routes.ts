@@ -9,7 +9,11 @@ export const PUBLIC_LAYOUT_ROUTES: Routes = [
       {
         path: 'login',
         loadChildren: () =>
-          import('src/features/feature-login').then((m) => m.FEATURE_LOGIN_ROUTES),
+          import('@features/feature-login').then((m) => m.FEATURE_LOGIN_ROUTES),
+      },
+      {
+        path: '404',
+        loadComponent: () => import('@features/feature-not-found').then((m) => m.NotFoundComponent),
       },
       {
         path: '',

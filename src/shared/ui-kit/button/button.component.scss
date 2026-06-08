@@ -17,43 +17,43 @@
   white-space: nowrap;
   transition: background 0.15s;
 
-  &[data-variant='primary'] {
+  :host(.primary) & {
     background: var(--color-primary);
     color: var(--color-white);
 
     &:hover:not(:disabled) {
-      background: #004a8c;
+      background: var(--color-primary-hover);
     }
 
     &:active:not(:disabled) {
-      background: #003a6e;
+      background: var(--color-primary-active);
     }
   }
 
-  &[data-variant='secondary'] {
+  :host(.secondary) & {
     background: var(--color-window);
     color: var(--text-primary);
     border: 1px solid var(--color-stroke);
 
     &:hover:not(:disabled) {
-      background: #e9ecef;
+      background: var(--color-secondary-hover);
     }
 
     &:active:not(:disabled) {
-      background: #dee2e6;
+      background: var(--color-secondary-active);
     }
   }
 
-  &[data-variant='danger'] {
+  :host(.danger) & {
     background: var(--color-error);
     color: var(--color-white);
 
     &:hover:not(:disabled) {
-      background: #b02a37;
+      background: var(--color-danger-hover);
     }
 
     &:active:not(:disabled) {
-      background: #8c1e28;
+      background: var(--color-danger-active);
     }
   }
 

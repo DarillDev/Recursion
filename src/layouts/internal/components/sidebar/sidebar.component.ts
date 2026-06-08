@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '@shared/auth';
-import { IconComponent, EIconName } from '@shared/ui-kit/icon';
+import { IconComponent } from '@shared/ui-kit/icon';
 
 @Component({
   selector: 'app-sidebar',

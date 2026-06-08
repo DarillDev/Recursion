@@ -1,7 +1,7 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 
 import { AppComponent } from './app/app.component';
-import { AppEnvironmentMapper } from 'src/shared/core/app-environment';
+import { AppEnvironmentMapper } from '@shared/core/app-env';
 
 /**
  * app.config-resolver содержит все провайдеры приложения и является самым тяжёлым чанком.

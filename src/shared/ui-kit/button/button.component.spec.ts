@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { ButtonComponent } from './button.component';
 
 @Component({
@@ -8,9 +8,9 @@ import { ButtonComponent } from './button.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class TestHostComponent {
-  variant: 'primary' | 'secondary' | 'danger' = 'primary';
-  disabled = false;
-  type: 'button' | 'submit' | 'reset' = 'button';
+  public variant: 'primary' | 'secondary' | 'danger' = 'primary';
+  public disabled = false;
+  public type: 'button' | 'submit' | 'reset' = 'button';
 }
 
 describe('ButtonComponent', () => {

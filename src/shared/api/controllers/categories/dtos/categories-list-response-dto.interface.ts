@@ -1,5 +1,9 @@
-import type { ICategory } from '../interfaces/category.interface';
+export interface ICategoryItemDto {
+  id: number;
+  name: string;
+}
 
 export interface ICategoriesListResponseDto {
-  items: ICategory[];
+  items: ICategoryItemDto[];
+  canEdit: boolean;
 }
