@@ -72,12 +72,17 @@ describe('CategoryFormDialogComponent', () => {
     });
   });
 
-  it('closes with form value on valid submit', () => {
+  it('closes with form value on valid submit', async () => {
+    vi.useFakeTimers();
+    categoriesServiceStub.checkNameExists.mockReturnValue(of(false));
     const fixture = createComponent(null);
     fixture.componentInstance['form'].controls.name.setValue('New Cat');
+    await vi.advanceTimersByTimeAsync(400);
+    fixture.detectChanges();
     fixture.debugElement.query(By.css('[data-testid="save-btn"]')).nativeElement.click();
     fixture.detectChanges();
     expect(dialogRefSpy.close).toHaveBeenCalledWith({ name: 'New Cat' });
+    vi.useRealTimers();
   });
 
   it('closes with undefined on cancel', () => {

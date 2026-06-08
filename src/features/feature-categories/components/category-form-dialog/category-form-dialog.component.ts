@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ReactiveFormsModule, Validators, FormBuilder } from '@angular/forms';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
-import { take } from 'rxjs';
 import type { ICategory } from '@shared/api/categories';
 import { CategoriesService } from '@shared/api/categories';
-import type { ICategoryForm } from '../../interfaces/category-form.interface';
+import type { ICategoryForm } from '../../models/interfaces/category-form.interface';
 import { ModalContainerComponent } from '@shared/ui-kit/modal';
 import { ButtonComponent } from '@shared/ui-kit/button';
 import { InputFieldComponent } from '@shared/ui-kit/input/components/input-field';
@@ -45,26 +44,11 @@ export class CategoryFormDialogComponent {
   }
 
   protected onSubmit(): void {
-    if (this.form.invalid) {
+    if (this.form.status !== 'VALID') {
       this.form.markAllAsTouched();
       return;
     }
-
-    const rawValue = this.form.getRawValue();
-    const name = rawValue.name.trim();
-
-    /** При submit проверяем уникальность имени независимо от состояния async-валидатора формы */
-    this.categoriesService.checkNameExists({
-      name,
-      id: this.data?.id ?? null,
-    }).pipe(take(1)).subscribe((exists) => {
-      if (exists) {
-        this.form.controls.name.setErrors({ nameExists: true });
-        this.form.markAllAsTouched();
-      } else {
-        this.dialogRef.close(rawValue);
-      }
-    });
+    this.dialogRef.close(this.form.getRawValue());
   }
 
   protected cancel(): void {
